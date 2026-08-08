@@ -5,15 +5,15 @@ dotenv.config();
 
 const { Pool } = pg;
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  'postgresql://neondb_owner:npg_W5pKDlqQ1GjR@ep-dark-shadow-ax2anau5-pooler.c-4.us-east-2.aws.neon.tech/neondb?sslmode=require';
+const connectionString = process.env.DATABASE_URL || '';
+
+if (!connectionString) {
+  console.warn('[ClinicBell DB] WARNING: DATABASE_URL is not configured in environment variables.');
+}
 
 export const pool = new Pool({
   connectionString,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: connectionString.includes('sslmode=') || connectionString.includes('neon.tech') ? { rejectUnauthorized: false } : undefined
 });
 
 // Helper to initialize database schema & tables automatically
