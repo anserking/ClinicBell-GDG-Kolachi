@@ -24,7 +24,7 @@ export const PWAInstallBanner: React.FC = () => {
             <Smartphone className="w-4 h-4 text-[#25D366]" />
           </div>
           <div>
-            <span className="font-semibold block sm:inline">Install Sehat Loop App</span>
+            <span className="font-semibold block sm:inline">Install ClinicBell App</span>
             <span className="text-[#9FC0BA] sm:ml-2 text-[11px] sm:text-xs">
               Add to Home Screen for fast offline clinical access
             </span>
@@ -65,7 +65,7 @@ export const PWAInstallBanner: React.FC = () => {
               <div className="w-12 h-12 bg-[#0F5C56]/10 text-[#0F5C56] rounded-full flex items-center justify-center mx-auto mb-3">
                 <Smartphone className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Install Sehat Loop</h3>
+              <h3 className="text-lg font-bold text-slate-900">Install ClinicBell</h3>
               <p className="text-xs text-slate-500 mt-1">
                 Follow these simple steps to add the app to your home screen:
               </p>

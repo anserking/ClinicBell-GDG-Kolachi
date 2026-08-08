@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div>
             <div className="font-serif-display text-lg font-bold text-white leading-tight tracking-tight">
-              Sehat Loop
+              ClinicBell
             </div>
             <div className="text-[11px] text-[#9FC0BA] font-mono-tabular tracking-wide">
               Al-Noor Clinic · Karachi

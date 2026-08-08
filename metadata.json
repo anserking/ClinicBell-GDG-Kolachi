@@ -1,5 +1,5 @@
 {
-  "name": "Sehat Loop Doctor Dashboard",
+  "name": "ClinicBell Doctor Dashboard",
   "description": "Fast clinical dashboard for Karachi doctors to manage patient queues, voice prescription notes, and automated WhatsApp follow-ups.",
   "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

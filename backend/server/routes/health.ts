@@ -5,7 +5,7 @@ const router = Router();
 router.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'Sehat Loop — ClinicBell API',
+    service: 'ClinicBell API',
     time: new Date().toISOString()
   });
 });

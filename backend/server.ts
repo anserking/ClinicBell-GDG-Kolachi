@@ -36,11 +36,11 @@ app.use('/api/gemini', geminiRouter);
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'Sehat Loop API',
+    service: 'ClinicBell API',
     message: 'Backend server is running cleanly.'
   });
 });
 
 app.listen(PORT, () => {
-  console.log(`[Sehat Loop Backend] Running on port ${PORT}`);
+  console.log(`[ClinicBell Backend] Running on port ${PORT}`);
 });

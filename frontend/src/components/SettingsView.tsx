@@ -24,7 +24,7 @@ export const SettingsView: React.FC = () => {
           Clinic Settings &amp; Preferences
         </h1>
         <p className="text-xs text-[#7C8F87] font-mono-tabular mt-0.5">
-          Configure Sehat Loop defaults and WhatsApp follow-up messaging
+          Configure ClinicBell defaults and WhatsApp follow-up messaging
         </p>
       </div>
 

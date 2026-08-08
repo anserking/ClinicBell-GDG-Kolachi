@@ -1,6 +1,6 @@
 {
-  "name": "Sehat Loop — ClinicBell",
-  "short_name": "SehatLoop",
+  "name": "ClinicBell",
+  "short_name": "ClinicBell",
   "description": "AI-powered healthcare & clinic management system for doctors and clinics in Pakistan.",
   "start_url": "/",
   "scope": "/",

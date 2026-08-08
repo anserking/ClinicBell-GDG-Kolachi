@@ -2,8 +2,8 @@ import { useSyncExternalStore } from 'react';
 import { ActiveView, Patient, FollowupRecord } from '../types';
 import { initialPatients, initialFollowups } from '../data/initialData';
 
-const STORAGE_KEY_PATIENTS = 'sehatloop_patients_v1';
-const STORAGE_KEY_FOLLOWUPS = 'sehatloop_followups_v1';
+const STORAGE_KEY_PATIENTS = 'clinicbell_patients_v1';
+const STORAGE_KEY_FOLLOWUPS = 'clinicbell_followups_v1';
 
 // Helper to load persisted data from localStorage with fallback to initialData
 function getInitialPatients(): Patient[] {
