@@ -145,14 +145,21 @@ router.post('/scan-prescription', async (req, res) => {
       ? imageBase64
       : `data:image/jpeg;base64,${imageBase64}`;
 
-    const visionPrompt = `You are an expert medical OCR specialist trained in deciphering handwritten doctor notes, prescriptions, and medical slips.
-Examine this image carefully. Transcribe and decipher all handwritten patient details, medical diagnosis, and prescribed medications.
+    const visionPrompt = `You are an expert medical OCR specialist and clinical AI trained in deciphering handwritten doctor notes, prescriptions, and medical slips.
+Examine this prescription image carefully. Extract and decipher ALL text, patient details, diagnosis, clinical symptoms, and prescribed medications.
 
-Format response into valid JSON with keys:
+Extract complete details for every medication listed:
+- Exact Medicine Name & Strength (e.g. Tab Paracetamol 500mg, Syr Hydryllin)
+- Number of Doses Per Day & Daily Frequency (e.g. 3 times daily (1-1-1), 2 times daily (1-0-1))
+- Timings & Meal Instructions (e.g. After meals, At bedtime, Empty stomach)
+- Treatment Duration (e.g. 3 days, 5 days, 1 week)
+- Clinical Purpose / Reason for medication (e.g. For fever & pain relief, For bacterial infection)
+
+Format your response as valid JSON with keys:
 {
-  "diagnosis": "Deciphered medical condition or main text read from image",
-  "prescription": "Formatted list of prescribed medications or deciphered text read from image",
-  "advice": "General patient advice or care instructions"
+  "diagnosis": "Deciphered medical condition, symptoms, or primary clinical reason (e.g. Acute Pharyngitis & Pyrexia)",
+  "prescription": "Thorough, beautifully formatted list of all prescribed medications in standard medical order:\n1. Tab Paracetamol 500mg — 3 times daily (1-1-1) After meals x 3 days [Reason: Fever & Pain Relief]\n2. Tab Augmentin 625mg — 2 times daily (1-0-1) After meals x 5 days [Reason: Infection]",
+  "advice": "General care advice, fluid intake, or follow-up schedule"
 }`;
 
     const parsed = await callOpenRouter([
