@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Patient, VisitRecord } from '../types';
 import { SkeletonCard } from './ui/SkeletonCard';
+import { PrescriptionForm, MedicineItem } from './PrescriptionForm';
+import { PrescriptionScannerModal } from './PrescriptionScannerModal';
+import { VoiceInputButton } from './ui/VoiceInputButton';
 import {
   X,
   Mic,
@@ -14,7 +17,8 @@ import {
   FileText,
   AlertCircle,
   Phone,
-  Volume2
+  Volume2,
+  Camera
 } from 'lucide-react';
 
 interface PatientDrawerProps {
@@ -37,6 +41,8 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
   const [audioTranscript, setAudioTranscript] = useState('');
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [structuredMedicines, setStructuredMedicines] = useState<MedicineItem[]>([]);
 
   // Parsed AI fields
   const [parsedDiagnosis, setParsedDiagnosis] = useState('');
@@ -270,34 +276,62 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
 
           {/* New Diagnosis & Prescription Input */}
           <div className="border border-[#DCE6E2] rounded-2xl p-5 bg-white shadow-2xs space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-semibold text-[#142420] flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#0F5C56]" />
-                <span>New Diagnosis & Prescription</span>
+                <span>New Clinical Visit &amp; Prescription</span>
               </h3>
 
-              {/* Mode Toggle */}
-              <div className="flex bg-[#F4F7F6] p-1 rounded-xl border border-[#DCE6E2] text-xs">
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setInputMode('voice')}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${inputMode === 'voice'
-                    ? 'bg-white text-[#0A413D] shadow-xs'
-                    : 'text-[#4E6259] hover:text-[#142420]'
-                    }`}
+                  type="button"
+                  onClick={() => setIsScannerOpen(true)}
+                  className="flex items-center gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1DA851] font-semibold text-xs px-3 py-1.5 rounded-xl border border-[#25D366]/30 transition-all cursor-pointer"
                 >
-                  Voice Dictation
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>📸 Scan Doctor Prescription</span>
                 </button>
-                <button
-                  onClick={() => setInputMode('text')}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${inputMode === 'text'
-                    ? 'bg-white text-[#0A413D] shadow-xs'
-                    : 'text-[#4E6259] hover:text-[#142420]'
-                    }`}
-                >
-                  Type Note
-                </button>
+
+                {/* Mode Toggle */}
+                <div className="flex bg-[#F4F7F6] p-1 rounded-xl border border-[#DCE6E2] text-xs">
+                  <button
+                    onClick={() => setInputMode('voice')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${inputMode === 'voice'
+                      ? 'bg-white text-[#0A413D] shadow-xs'
+                      : 'text-[#4E6259] hover:text-[#142420]'
+                      }`}
+                  >
+                    Voice Dictation
+                  </button>
+                  <button
+                    onClick={() => setInputMode('text')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${inputMode === 'text'
+                      ? 'bg-white text-[#0A413D] shadow-xs'
+                      : 'text-[#4E6259] hover:text-[#142420]'
+                      }`}
+                  >
+                    Type Note
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Voice Dictation Button Bar */}
+            <VoiceInputButton
+              onTranscriptChange={(text) => {
+                if (inputMode === 'voice') setAudioTranscript(text);
+                else setTypedText(text);
+              }}
+              patientName={patient.name}
+            />
+
+            {/* Structured Medication Prescription Form */}
+            <PrescriptionForm
+              initialItems={structuredMedicines}
+              onPrescriptionChange={(formattedText) => {
+                setParsedPrescription(formattedText);
+              }}
+            />
 
             {/* Input Panels */}
             {inputMode === 'voice' ? (
@@ -492,6 +526,27 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Prescription Image OCR Scanner Modal */}
+      <PrescriptionScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanComplete={(data) => {
+          if (data.diagnosis) setParsedDiagnosis(data.diagnosis);
+          if (data.prescription) setParsedPrescription(data.prescription);
+          if (data.medicines && data.medicines.length > 0) {
+            setStructuredMedicines(
+              data.medicines.map((m, idx) => ({
+                id: `scanned-${idx}`,
+                name: m.name || '',
+                frequency: m.frequency || '1-0-1',
+                duration: m.duration || '5 days',
+                instructions: m.instructions || 'After meals'
+              }))
+            );
+          }
+        }}
+      />
     </div>
   );
 };

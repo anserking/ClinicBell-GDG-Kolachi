@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FollowupRecord, Patient } from '../types';
-import { MessageSquare, Send, CheckCircle2, Clock, Search, ExternalLink } from 'lucide-react';
+import { MessageSquare, Send, CheckCircle2, Clock, Search, ExternalLink, Edit3 } from 'lucide-react';
+import { VoiceInputButton } from './ui/VoiceInputButton';
 
 interface FollowupsViewProps {
   followups: FollowupRecord[];
@@ -17,6 +18,8 @@ export const FollowupsView: React.FC<FollowupsViewProps> = ({
 }) => {
   const [filter, setFilter] = useState<'all' | 'due' | 'sent'>('all');
   const [search, setSearch] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [customMsgs, setCustomMsgs] = useState<Record<string, string>>({});
 
   const filteredFollowups = followups.filter((f) => {
     const matchesFilter = filter === 'all' || f.status === filter;
@@ -36,7 +39,7 @@ export const FollowupsView: React.FC<FollowupsViewProps> = ({
             WhatsApp Follow-ups Log
           </h1>
           <p className="text-xs text-[#7C8F87] font-mono-tabular mt-0.5">
-            Automated check-ins and recovery tracking
+            Automated check-ins and recovery tracking with Voice Dictation &amp; Gemini AI
           </p>
         </div>
 
@@ -106,6 +109,8 @@ export const FollowupsView: React.FC<FollowupsViewProps> = ({
                   history: []
                 };
 
+                const currentMsg = customMsgs[f.id] ?? f.customMessage ?? `Assalam-o-Alaikum ${f.patientName}, this is GDGDemo Hospital following up...`;
+
                 return (
                   <tr key={f.id} className="hover:bg-[#F4F7F6]/50 transition-colors">
                     <td className="py-3.5 px-4 font-medium text-[#142420]">
@@ -115,9 +120,39 @@ export const FollowupsView: React.FC<FollowupsViewProps> = ({
 
                     <td className="py-3.5 px-4 text-[#4E6259]">
                       <div className="line-clamp-1 font-medium">{f.diagnosisSummary}</div>
-                      <div className="text-[11px] text-[#7C8F87] line-clamp-1 mt-0.5">
-                        "{f.customMessage || 'Assalam-o-Alaikum, this is Al-Noor Clinic...'}"
-                      </div>
+                      
+                      {editingId === f.id ? (
+                        <div className="space-y-2 mt-2 bg-white p-3 rounded-xl border border-[#DCE6E2]">
+                          <VoiceInputButton
+                            onTranscriptChange={(text) => setCustomMsgs({ ...customMsgs, [f.id]: text })}
+                            patientName={f.patientName}
+                          />
+                          <textarea
+                            value={currentMsg}
+                            onChange={(e) => setCustomMsgs({ ...customMsgs, [f.id]: e.target.value })}
+                            className="w-full h-20 p-2 bg-[#F4F7F6] border border-[#DCE6E2] rounded-lg text-xs font-mono-tabular text-[#142420]"
+                          />
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="text-[11px] font-bold text-[#0F5C56] hover:underline"
+                          >
+                            Done Editing
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <div className="text-[11px] text-[#7C8F87] line-clamp-1 flex-1 font-mono-tabular">
+                            "{currentMsg}"
+                          </div>
+                          <button
+                            onClick={() => setEditingId(f.id)}
+                            className="text-[#7C8F87] hover:text-[#0F5C56] p-1"
+                            title="Voice Edit Message"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </td>
 
                     <td className="py-3.5 px-4 font-mono-tabular text-xs text-[#142420]">
@@ -139,8 +174,8 @@ export const FollowupsView: React.FC<FollowupsViewProps> = ({
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => onSendWhatsApp(patient, f.customMessage || '')}
-                          className="flex items-center gap-1 bg-[#25D366] hover:bg-[#1DA851] text-[#06331A] hover:text-white font-semibold text-xs py-1.5 px-3 rounded-lg transition-all"
+                          onClick={() => onSendWhatsApp(patient, currentMsg)}
+                          className="flex items-center gap-1 bg-[#25D366] hover:bg-[#1DA851] text-[#06331A] hover:text-white font-semibold text-xs py-1.5 px-3 rounded-lg transition-all cursor-pointer"
                         >
                           <Send className="w-3 h-3" />
                           <span>WhatsApp</span>
@@ -148,7 +183,7 @@ export const FollowupsView: React.FC<FollowupsViewProps> = ({
                         {f.status !== 'sent' && (
                           <button
                             onClick={() => onMarkSent(f.id)}
-                            className="p-1.5 border border-[#DCE6E2] hover:bg-white text-[#7C8F87] hover:text-[#142420] rounded-lg transition-colors"
+                            className="p-1.5 border border-[#DCE6E2] hover:bg-white text-[#7C8F87] hover:text-[#142420] rounded-lg transition-colors cursor-pointer"
                             title="Mark as Sent"
                           >
                             <CheckCircle2 className="w-4 h-4" />
