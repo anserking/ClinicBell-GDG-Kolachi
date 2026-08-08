@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 const router = Router();
 
-// Helper to call OpenRouter API with google/gemini-2.0-flash-lite-001 or google/gemini-flash-1.5 model
+// Helper to call OpenRouter API with verified OpenRouter model IDs
 const callOpenRouter = async (messages: any[]): Promise<any | null> => {
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY || '';
   if (!apiKey || apiKey === 'your_google_gemini_api_key_here') {
@@ -10,11 +10,12 @@ const callOpenRouter = async (messages: any[]): Promise<any | null> => {
     return null;
   }
 
-  // Model list to try in order of preference on OpenRouter
+  // Active verified OpenRouter model IDs
   const candidateModels = [
-    'google/gemini-2.0-flash-lite-001',
-    'google/gemini-flash-1.5',
-    'google/gemini-2.0-flash-exp:free'
+    'google/gemini-3.6-flash',
+    'google/gemini-3.5-flash-lite',
+    'google/gemini-2.5-flash',
+    'openrouter/auto'
   ];
 
   for (const model of candidateModels) {
