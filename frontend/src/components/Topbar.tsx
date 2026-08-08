@@ -1,11 +1,14 @@
 import React from 'react';
-import { Search, Plus, Calendar, Menu } from 'lucide-react';
+import { Search, Plus, Calendar, Menu, ShieldCheck, User } from 'lucide-react';
+import { UserRole } from '../types';
 
 interface TopbarProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   queueCount: number;
+  userRole?: UserRole;
   onOpenNewPatientModal: () => void;
+  onOpenAuthModal?: () => void;
   onToggleMobileSidebar?: () => void;
 }
 
@@ -13,7 +16,9 @@ export const Topbar: React.FC<TopbarProps> = ({
   searchQuery,
   setSearchQuery,
   queueCount,
+  userRole = 'doctor',
   onOpenNewPatientModal,
+  onOpenAuthModal,
   onToggleMobileSidebar
 }) => {
   const currentDateFormatted = new Date().toLocaleDateString('en-US', {
@@ -26,6 +31,14 @@ export const Topbar: React.FC<TopbarProps> = ({
   return (
     <header className="sticky top-0 z-20 bg-white border-b border-[#DCE6E2] px-4 md:px-8 py-3.5 flex items-center justify-between gap-4 shadow-xs">
       <div className="flex items-center gap-3 flex-1 max-w-lg">
+        {onToggleMobileSidebar && (
+          <button
+            onClick={onToggleMobileSidebar}
+            className="md:hidden p-2 text-[#4E6259] hover:text-[#142420] rounded-xl border border-[#DCE6E2]"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7C8F87]" />
           <input
@@ -45,13 +58,25 @@ export const Topbar: React.FC<TopbarProps> = ({
         <strong className="text-[#142420] font-semibold">{queueCount} patients</strong> in queue
       </div>
 
-      <button
-        onClick={onOpenNewPatientModal}
-        className="flex items-center gap-1.5 bg-[#0F5C56] hover:bg-[#0A413D] text-white font-semibold text-xs md:text-sm py-2 px-3.5 rounded-xl transition-all shadow-xs active:scale-[0.98] shrink-0"
-      >
-        <Plus className="w-4 h-4 stroke-[2.2]" />
-        <span>New Patient</span>
-      </button>
+      <div className="flex items-center gap-2">
+        {onOpenAuthModal && (
+          <button
+            onClick={onOpenAuthModal}
+            className="flex items-center gap-1.5 bg-[#E5F0EE] hover:bg-[#0F5C56] text-[#0A413D] hover:text-white font-semibold text-xs md:text-sm py-2 px-3 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span className="capitalize">{userRole} Auth</span>
+          </button>
+        )}
+
+        <button
+          onClick={onOpenNewPatientModal}
+          className="flex items-center gap-1.5 bg-[#0F5C56] hover:bg-[#0A413D] text-white font-semibold text-xs md:text-sm py-2 px-3.5 rounded-xl transition-all shadow-xs active:scale-[0.98] shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.2]" />
+          <span>New Patient</span>
+        </button>
+      </div>
     </header>
   );
 };

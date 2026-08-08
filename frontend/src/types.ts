@@ -39,4 +39,40 @@ export interface FollowupRecord {
   customMessage?: string;
 }
 
-export type ActiveView = 'today' | 'patients' | 'followups' | 'settings';
+export type UserRole = 'admin' | 'doctor' | 'patient';
+
+export interface User {
+  id: string;
+  cnic: string;
+  name: string;
+  phone: string;
+  role: UserRole;
+  hospitalName: string;
+  specialty?: string;
+  age?: number;
+  gender?: 'Male' | 'Female' | 'Other';
+}
+
+export interface DoctorRecord {
+  id: string;
+  cnic: string;
+  name: string;
+  phone: string;
+  specialty: string;
+  registeredAt: string;
+}
+
+export interface CustomerRecord {
+  id: string;
+  cnic: string;
+  name: string;
+  phone: string;
+  age: number;
+  gender: 'Male' | 'Female' | 'Other';
+  registeredAt: string;
+}
+
+export type AdminTab = 'doctors' | 'customers';
+
+export type ActiveView = 'today' | 'patients' | 'followups' | 'settings' | 'admin' | 'patient-portal';
+

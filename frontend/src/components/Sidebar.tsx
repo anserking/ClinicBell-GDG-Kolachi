@@ -7,7 +7,9 @@ import {
   Settings,
   Plus,
   Stethoscope,
-  Activity
+  Activity,
+  ShieldCheck,
+  FileText
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -125,6 +127,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Settings className="w-4.5 h-4.5 opacity-90" />
               <span>Settings</span>
             </div>
+          </button>
+
+          <div className="pt-2 mt-2 border-t border-white/10 text-[11px] font-semibold text-[#9FC0BA] uppercase tracking-wider px-3">
+            Portals &amp; Auth
+          </div>
+
+          <button
+            onClick={() => setActiveView('admin')}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              activeView === 'admin'
+                ? 'bg-white/15 text-white font-semibold'
+                : 'text-[#C9DEDA] hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck className="w-4.5 h-4.5 opacity-90 text-[#25D366]" />
+              <span>Admin Panel</span>
+            </div>
+            <span className="text-[10px] font-mono-tabular px-2 py-0.5 rounded-md bg-[#25D366]/20 text-[#25D366]">
+              Admin
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveView('patient-portal')}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              activeView === 'patient-portal'
+                ? 'bg-white/15 text-white font-semibold'
+                : 'text-[#C9DEDA] hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <FileText className="w-4.5 h-4.5 opacity-90 text-[#9FC0BA]" />
+              <span>Customer Portal</span>
+            </div>
+            <span className="text-[10px] font-mono-tabular px-2 py-0.5 rounded-md bg-white/10 text-[#C9DEDA]">
+              Customer
+            </span>
           </button>
         </nav>
       </div>

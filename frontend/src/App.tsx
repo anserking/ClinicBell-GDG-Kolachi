@@ -9,6 +9,9 @@ import { TodayQueueView } from './components/views/TodayQueueView';
 import { PatientsView } from './components/views/PatientsView';
 import { FollowupsView } from './components/FollowupsView';
 import { SettingsView } from './components/SettingsView';
+import { AdminView } from './components/AdminView';
+import { PatientPortalView } from './components/PatientPortalView';
+import { AuthModal } from './components/AuthModal';
 import { PatientDrawer } from './components/PatientDrawer';
 import { NewPatientModal } from './components/NewPatientModal';
 
@@ -18,13 +21,22 @@ export default function App() {
     searchQuery,
     patients,
     followups,
+    doctors,
+    customers,
     selectedPatient,
     isNewPatientModalOpen,
+    isAuthModalOpen,
+    userRole,
+    currentUser,
 
     setActiveView,
     setSearchQuery,
     setSelectedPatient,
     setIsNewPatientModalOpen,
+    setIsAuthModalOpen,
+    loginUser,
+    addDoctor,
+    addCustomer,
     addPatient,
     updatePatient,
     markFollowupSent,
@@ -45,7 +57,7 @@ export default function App() {
     );
   };
 
-  // Queue filtered by today's checked-in patients (or checkedInDate == today / fallback status)
+  // Queue filtered by today's checked-in patients
   const todayQueue = patients.filter(
     (p) => filterPatient(p) && (p.checkedInDate === todayStr || p.lastVisit === 'Today' || p.status === 'new')
   );
@@ -79,7 +91,9 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           queueCount={todayQueue.length}
+          userRole={userRole}
           onOpenNewPatientModal={() => setIsNewPatientModalOpen(true)}
+          onOpenAuthModal={() => setIsAuthModalOpen(true)}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
@@ -112,6 +126,24 @@ export default function App() {
             />
           )}
 
+          {/* ADMIN CONTROL PANEL */}
+          {activeView === 'admin' && (
+            <AdminView
+              doctors={doctors}
+              customers={customers}
+              onAddDoctor={addDoctor}
+              onAddCustomer={addCustomer}
+            />
+          )}
+
+          {/* CUSTOMER / PATIENT PORTAL */}
+          {activeView === 'patient-portal' && (
+            <PatientPortalView
+              patient={selectedPatient || patients[0] || null}
+              hospitalName={currentUser?.hospitalName}
+            />
+          )}
+
           {/* SETTINGS VIEW */}
           {activeView === 'settings' && <SettingsView />}
         </main>
@@ -139,6 +171,13 @@ export default function App() {
         isOpen={isNewPatientModalOpen}
         onClose={() => setIsNewPatientModalOpen(false)}
         onAddPatient={addPatient}
+      />
+
+      {/* Authorization Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLogin={loginUser}
       />
     </div>
   );

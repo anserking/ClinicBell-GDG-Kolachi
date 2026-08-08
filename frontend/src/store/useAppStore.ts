@@ -1,11 +1,53 @@
 import { useSyncExternalStore } from 'react';
-import { ActiveView, Patient, FollowupRecord } from '../types';
+import { ActiveView, Patient, FollowupRecord, UserRole, User, DoctorRecord, CustomerRecord } from '../types';
 import { initialPatients, initialFollowups } from '../data/initialData';
 
 const STORAGE_KEY_PATIENTS = 'clinicbell_patients_v1';
 const STORAGE_KEY_FOLLOWUPS = 'clinicbell_followups_v1';
+const STORAGE_KEY_DOCTORS = 'clinicbell_doctors_v1';
+const STORAGE_KEY_CUSTOMERS = 'clinicbell_customers_v1';
 
-// Helper to load persisted data from localStorage with fallback to initialData
+const initialDoctors: DoctorRecord[] = [
+  {
+    id: 'doc-001',
+    cnic: '42101-1234567-1',
+    name: 'Dr. Ahmed Raza',
+    phone: '+92 300 1234567',
+    specialty: 'General Medicine',
+    registeredAt: 'Today'
+  },
+  {
+    id: 'doc-002',
+    cnic: '42101-2345678-2',
+    name: 'Dr. Sara Khan',
+    phone: '+92 300 9876543',
+    specialty: 'Pediatrics',
+    registeredAt: 'Yesterday'
+  }
+];
+
+const initialCustomers: CustomerRecord[] = [
+  {
+    id: 'cust-001',
+    cnic: '42101-9876543-2',
+    name: 'Fatima Tariq',
+    phone: '+92 321 9876543',
+    age: 28,
+    gender: 'Female',
+    registeredAt: 'Today'
+  },
+  {
+    id: 'cust-002',
+    cnic: '42101-8765432-1',
+    name: 'Tariq Mehmood',
+    phone: '+92 333 8765432',
+    age: 54,
+    gender: 'Male',
+    registeredAt: '3 days ago'
+  }
+];
+
+// Helpers to load persisted data from localStorage
 function getInitialPatients(): Patient[] {
   try {
     const saved = localStorage.getItem(STORAGE_KEY_PATIENTS);
@@ -32,14 +74,41 @@ function getInitialFollowups(): FollowupRecord[] {
   return initialFollowups;
 }
 
+function getInitialDoctors(): DoctorRecord[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_DOCTORS);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (err) {}
+  return initialDoctors;
+}
+
+function getInitialCustomers(): CustomerRecord[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_CUSTOMERS);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (err) {}
+  return initialCustomers;
+}
+
 export interface AppState {
   activeView: ActiveView;
   searchQuery: string;
   patients: Patient[];
   followups: FollowupRecord[];
+  doctors: DoctorRecord[];
+  customers: CustomerRecord[];
   selectedPatient: Patient | null;
   isNewPatientModalOpen: boolean;
   isMobileSidebarOpen: boolean;
+  isAuthModalOpen: boolean;
+  userRole: UserRole;
+  currentUser: User | null;
 
   // Actions
   setActiveView: (view: ActiveView) => void;
@@ -47,6 +116,10 @@ export interface AppState {
   setSelectedPatient: (patient: Patient | null) => void;
   setIsNewPatientModalOpen: (isOpen: boolean) => void;
   setIsMobileSidebarOpen: (isOpen: boolean) => void;
+  setIsAuthModalOpen: (isOpen: boolean) => void;
+  loginUser: (cnic: string, role: UserRole, hospitalName: string) => void;
+  addDoctor: (doctor: Omit<DoctorRecord, 'id' | 'registeredAt'>, password: string) => void;
+  addCustomer: (customer: Omit<CustomerRecord, 'id' | 'registeredAt'>, password: string) => void;
   addPatient: (newPatient: Patient) => void;
   updatePatient: (updatedPatient: Patient) => void;
   markFollowupSent: (followupId: string) => void;
@@ -63,15 +136,88 @@ class Store {
       searchQuery: '',
       patients: getInitialPatients(),
       followups: getInitialFollowups(),
+      doctors: getInitialDoctors(),
+      customers: getInitialCustomers(),
       selectedPatient: null,
       isNewPatientModalOpen: false,
       isMobileSidebarOpen: false,
+      isAuthModalOpen: false,
+      userRole: 'doctor',
+      currentUser: {
+        id: 'u-doc-1',
+        cnic: '42101-1234567-1',
+        name: 'Dr. Ahmed Raza',
+        phone: '+92 300 1234567',
+        role: 'doctor',
+        hospitalName: 'GDGDemo Hospital — Al-Noor Clinic',
+        specialty: 'General Medicine'
+      },
 
       setActiveView: (view) => this.setState({ activeView: view, isMobileSidebarOpen: false }),
       setSearchQuery: (query) => this.setState({ searchQuery: query }),
       setSelectedPatient: (patient) => this.setState({ selectedPatient: patient }),
       setIsNewPatientModalOpen: (isOpen) => this.setState({ isNewPatientModalOpen: isOpen }),
       setIsMobileSidebarOpen: (isOpen) => this.setState({ isMobileSidebarOpen: isOpen }),
+      setIsAuthModalOpen: (isOpen) => this.setState({ isAuthModalOpen: isOpen }),
+
+      loginUser: (cnic, role, hospitalName) => {
+        let name = 'Authorized User';
+        if (role === 'admin') name = 'Hospital Administrator';
+        if (role === 'doctor') name = 'Dr. Ahmed Raza';
+        if (role === 'patient') name = 'Fatima Tariq';
+
+        const user: User = {
+          id: `u-${Date.now().toString().slice(-4)}`,
+          cnic,
+          name,
+          phone: '+92 300 1234567',
+          role,
+          hospitalName
+        };
+
+        let targetView: ActiveView = 'today';
+        if (role === 'admin') targetView = 'admin';
+        if (role === 'patient') targetView = 'patient-portal';
+
+        // Find patient if logging in as patient
+        let matchedPatient = this.state.selectedPatient;
+        if (role === 'patient') {
+          matchedPatient = this.state.patients[0] || null;
+        }
+
+        this.setState({
+          currentUser: user,
+          userRole: role,
+          activeView: targetView,
+          selectedPatient: matchedPatient
+        });
+      },
+
+      addDoctor: (docData, _password) => {
+        const newDoctor: DoctorRecord = {
+          id: `doc-${Date.now().toString().slice(-4)}`,
+          ...docData,
+          registeredAt: 'Just now'
+        };
+        const updatedDoctors = [newDoctor, ...this.state.doctors];
+        this.setState({ doctors: updatedDoctors });
+        try {
+          localStorage.setItem(STORAGE_KEY_DOCTORS, JSON.stringify(updatedDoctors));
+        } catch (e) {}
+      },
+
+      addCustomer: (custData, _password) => {
+        const newCustomer: CustomerRecord = {
+          id: `cust-${Date.now().toString().slice(-4)}`,
+          ...custData,
+          registeredAt: 'Just now'
+        };
+        const updatedCustomers = [newCustomer, ...this.state.customers];
+        this.setState({ customers: updatedCustomers });
+        try {
+          localStorage.setItem(STORAGE_KEY_CUSTOMERS, JSON.stringify(updatedCustomers));
+        } catch (e) {}
+      },
 
       addPatient: (newPatient) => {
         const updatedPatients = [newPatient, ...this.state.patients];
