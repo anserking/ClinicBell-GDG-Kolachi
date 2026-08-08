@@ -24,6 +24,7 @@ export interface Patient {
   followupDelay?: string;
   followupMessage?: string;
   checkedInAt?: string;
+  checkedInDate?: string; // YYYY-MM-DD format for queue filtering
 }
 
 export interface FollowupRecord {

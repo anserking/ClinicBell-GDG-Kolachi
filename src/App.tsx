@@ -1,25 +1,42 @@
-import React, { useState } from 'react';
-import { ActiveView, Patient, FollowupRecord } from './types';
-import { initialPatients, initialFollowups } from './data/initialData';
+import React from 'react';
+import { useAppStore } from './store/useAppStore';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
-import { PatientCard } from './components/PatientCard';
-import { PatientDrawer } from './components/PatientDrawer';
-import { NewPatientModal } from './components/NewPatientModal';
+import { BottomNav } from './components/layout/BottomNav';
+import { PWAInstallBanner } from './components/ui/PWAInstallBanner';
+import { OfflineBanner } from './components/ui/OfflineBanner';
+import { TodayQueueView } from './components/views/TodayQueueView';
+import { PatientsView } from './components/views/PatientsView';
 import { FollowupsView } from './components/FollowupsView';
 import { SettingsView } from './components/SettingsView';
+import { PatientDrawer } from './components/PatientDrawer';
+import { NewPatientModal } from './components/NewPatientModal';
 
 export default function App() {
-  const [activeView, setActiveView] = useState<ActiveView>('today');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [patients, setPatients] = useState<Patient[]>(initialPatients);
-  const [followups, setFollowups] = useState<FollowupRecord[]>(initialFollowups);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const {
+    activeView,
+    searchQuery,
+    patients,
+    followups,
+    selectedPatient,
+    isNewPatientModalOpen,
+    isMobileSidebarOpen,
 
-  // Filter patients by search query
-  const filterPatient = (patient: Patient) => {
+    setActiveView,
+    setSearchQuery,
+    setSelectedPatient,
+    setIsNewPatientModalOpen,
+    setIsMobileSidebarOpen,
+    addPatient,
+    updatePatient,
+    markFollowupSent,
+    sendWhatsApp
+  } = useAppStore();
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Search filter
+  const filterPatient = (patient: typeof patients[0]) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -30,104 +47,30 @@ export default function App() {
     );
   };
 
-  const todayQueue = patients.filter(filterPatient);
+  // Queue filtered by today's checked-in patients (or checkedInDate == today / fallback status)
+  const todayQueue = patients.filter(
+    (p) => filterPatient(p) && (p.checkedInDate === todayStr || p.lastVisit === 'Today' || p.status === 'new')
+  );
   const allPatientsList = patients.filter(filterPatient);
 
-  // Quick WhatsApp Launcher
-  const handleSendWhatsApp = (patient: Patient, customMsg?: string) => {
-    const rawPhone = patient.phone.replace(/[^0-9]/g, '');
-    const cleanPhone = rawPhone.startsWith('92') ? rawPhone : `92${rawPhone.replace(/^0/, '')}`;
-    const text = encodeURIComponent(
-      customMsg ||
-        patient.followupMessage ||
-        `Assalam-o-Alaikum ${patient.name}, this is Al-Noor Clinic following up on your visit. How are you feeling today?`
-    );
-    window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
-
-    // Mark status as sent
-    setPatients((prev) =>
-      prev.map((p) => (p.id === patient.id ? { ...p, status: 'sent' as const } : p))
-    );
-    setFollowups((prev) =>
-      prev.map((f) => (f.patientId === patient.id ? { ...f, status: 'sent' as const } : f))
-    );
-  };
-
-  // Add new patient to state
-  const handleAddPatient = (newPatient: Patient) => {
-    setPatients((prev) => [newPatient, ...prev]);
-    if (newPatient.followupEnabled) {
-      const newFollowup: FollowupRecord = {
-        id: `F-${Date.now().toString().slice(-4)}`,
-        patientId: newPatient.id,
-        patientName: newPatient.name,
-        phone: newPatient.phone,
-        diagnosisSummary: newPatient.note,
-        sendDate: 'In 2 weeks',
-        status: 'due',
-        delay: '2 weeks',
-        customMessage: newPatient.followupMessage
-      };
-      setFollowups((prev) => [newFollowup, ...prev]);
-    }
-  };
-
-  // Update existing patient
-  const handleUpdatePatient = (updatedPatient: Patient) => {
-    setPatients((prev) => prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p)));
-    setSelectedPatient(updatedPatient);
-
-    // Update followups log
-    setFollowups((prev) => {
-      const exists = prev.some((f) => f.patientId === updatedPatient.id);
-      if (exists) {
-        return prev.map((f) =>
-          f.patientId === updatedPatient.id
-            ? {
-                ...f,
-                diagnosisSummary: updatedPatient.note,
-                customMessage: updatedPatient.followupMessage,
-                delay: updatedPatient.followupDelay || '2 weeks'
-              }
-            : f
-        );
-      } else if (updatedPatient.followupEnabled) {
-        return [
-          {
-            id: `F-${Date.now().toString().slice(-4)}`,
-            patientId: updatedPatient.id,
-            patientName: updatedPatient.name,
-            phone: updatedPatient.phone,
-            diagnosisSummary: updatedPatient.note,
-            sendDate: `In ${updatedPatient.followupDelay || '2 weeks'}`,
-            status: 'due',
-            delay: updatedPatient.followupDelay || '2 weeks',
-            customMessage: updatedPatient.followupMessage
-          },
-          ...prev
-        ];
-      }
-      return prev;
-    });
-  };
-
-  // Mark follow-up as sent
-  const handleMarkFollowupSent = (followupId: string) => {
-    setFollowups((prev) =>
-      prev.map((f) => (f.id === followupId ? { ...f, status: 'sent' as const } : f))
-    );
+  const handleQuickWhatsApp = (patient: typeof patients[0], e: React.MouseEvent) => {
+    e.stopPropagation();
+    sendWhatsApp(patient);
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7F6] text-[#142420] font-sans antialiased flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#F4F7F6] text-[#142420] font-sans antialiased flex flex-col md:flex-row pb-16 md:pb-0">
+      {/* Top Banner Notifications */}
+      <div className="fixed top-0 left-0 right-0 z-40">
+        <OfflineBanner />
+        <PWAInstallBanner />
+      </div>
+
       {/* Sidebar Desktop */}
       <div className="hidden md:block w-64 shrink-0">
         <Sidebar
           activeView={activeView}
-          setActiveView={(view) => {
-            setActiveView(view);
-            setIsMobileSidebarOpen(false);
-          }}
+          setActiveView={setActiveView}
           queueCount={todayQueue.length}
           patientsCount={patients.length}
           followupsCount={followups.length}
@@ -138,30 +81,24 @@ export default function App() {
       {/* Mobile Drawer Sidebar */}
       {isMobileSidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/40 z-40"
+          className="md:hidden fixed inset-0 bg-black/40 z-50"
           onClick={() => setIsMobileSidebarOpen(false)}
         >
           <div className="w-64 h-full" onClick={(e) => e.stopPropagation()}>
             <Sidebar
               activeView={activeView}
-              setActiveView={(view) => {
-                setActiveView(view);
-                setIsMobileSidebarOpen(false);
-              }}
+              setActiveView={setActiveView}
               queueCount={todayQueue.length}
               patientsCount={patients.length}
               followupsCount={followups.length}
-              onOpenNewPatientModal={() => {
-                setIsNewPatientModalOpen(true);
-                setIsMobileSidebarOpen(false);
-              }}
+              onOpenNewPatientModal={() => setIsNewPatientModalOpen(true)}
             />
           </div>
         </div>
       )}
 
       {/* Main Content Workspace */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden pt-2">
         <Topbar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -173,82 +110,21 @@ export default function App() {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {/* TODAY'S QUEUE VIEW */}
           {activeView === 'today' && (
-            <div className="space-y-6">
-              <div className="flex items-baseline justify-between gap-4">
-                <div>
-                  <h1 className="font-serif-display text-2xl font-bold text-[#142420]">
-                    Today's Queue
-                  </h1>
-                  <p className="text-xs text-[#7C8F87] font-mono-tabular mt-0.5">
-                    Torn prescription-slip cards · Click card to view history & dictation
-                  </p>
-                </div>
-                <span className="text-xs text-[#7C8F87] font-mono-tabular">
-                  {todayQueue.length} checked in
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {todayQueue.map((patient) => (
-                  <PatientCard
-                    key={patient.id}
-                    patient={patient}
-                    onSelect={(p) => setSelectedPatient(p)}
-                    onQuickWhatsApp={(p, e) => {
-                      e.stopPropagation();
-                      handleSendWhatsApp(p);
-                    }}
-                  />
-                ))}
-              </div>
-
-              {todayQueue.length === 0 && (
-                <div className="bg-white border border-[#DCE6E2] rounded-2xl p-12 text-center space-y-3">
-                  <div className="text-[#7C8F87] font-medium text-sm">
-                    No patients match your search filter.
-                  </div>
-                  <button
-                    onClick={() => setIsNewPatientModalOpen(true)}
-                    className="text-xs text-[#0F5C56] font-semibold underline"
-                  >
-                    Check in a new patient
-                  </button>
-                </div>
-              )}
-            </div>
+            <TodayQueueView
+              queue={todayQueue}
+              onSelectPatient={(p) => setSelectedPatient(p)}
+              onQuickWhatsApp={handleQuickWhatsApp}
+              onOpenNewPatientModal={() => setIsNewPatientModalOpen(true)}
+            />
           )}
 
           {/* ALL PATIENTS VIEW */}
           {activeView === 'patients' && (
-            <div className="space-y-6">
-              <div className="flex items-baseline justify-between gap-4">
-                <div>
-                  <h1 className="font-serif-display text-2xl font-bold text-[#142420]">
-                    All Patient Records
-                  </h1>
-                  <p className="text-xs text-[#7C8F87] font-mono-tabular mt-0.5">
-                    Complete medical records index
-                  </p>
-                </div>
-                <span className="text-xs text-[#7C8F87] font-mono-tabular">
-                  {allPatientsList.length} total records
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {allPatientsList.map((patient) => (
-                  <PatientCard
-                    key={patient.id}
-                    patient={patient}
-                    onSelect={(p) => setSelectedPatient(p)}
-                    onQuickWhatsApp={(p, e) => {
-                      e.stopPropagation();
-                      handleSendWhatsApp(p);
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
+            <PatientsView
+              patients={allPatientsList}
+              onSelectPatient={(p) => setSelectedPatient(p)}
+              onQuickWhatsApp={handleQuickWhatsApp}
+            />
           )}
 
           {/* FOLLOW-UPS LOG VIEW */}
@@ -256,8 +132,8 @@ export default function App() {
             <FollowupsView
               followups={followups}
               patients={patients}
-              onSendWhatsApp={handleSendWhatsApp}
-              onMarkSent={handleMarkFollowupSent}
+              onSendWhatsApp={(p, msg) => sendWhatsApp(p, msg)}
+              onMarkSent={markFollowupSent}
             />
           )}
 
@@ -266,19 +142,28 @@ export default function App() {
         </main>
       </div>
 
+      {/* Mobile Bottom Navigation Bar */}
+      <BottomNav
+        activeView={activeView}
+        setActiveView={setActiveView}
+        queueCount={todayQueue.length}
+        patientsCount={patients.length}
+        followupsCount={followups.length}
+      />
+
       {/* Patient Detail Drawer */}
       <PatientDrawer
         patient={selectedPatient}
         onClose={() => setSelectedPatient(null)}
-        onUpdatePatient={handleUpdatePatient}
-        onSendWhatsApp={handleSendWhatsApp}
+        onUpdatePatient={updatePatient}
+        onSendWhatsApp={(p, msg) => sendWhatsApp(p, msg)}
       />
 
       {/* New Patient Modal */}
       <NewPatientModal
         isOpen={isNewPatientModalOpen}
         onClose={() => setIsNewPatientModalOpen(false)}
-        onAddPatient={handleAddPatient}
+        onAddPatient={addPatient}
       />
     </div>
   );

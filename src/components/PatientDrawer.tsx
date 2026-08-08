@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Patient, VisitRecord } from '../types';
+import { SkeletonCard } from './ui/SkeletonCard';
 import {
   X,
   Mic,
@@ -389,6 +390,13 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* AI Loading Skeleton Loader */}
+            {isAiProcessing && (
+              <div className="py-1">
+                <SkeletonCard />
+              </div>
+            )}
 
             {/* Render Parsed AI Outputs if available */}
             {(parsedDiagnosis || parsedPrescription) && (
