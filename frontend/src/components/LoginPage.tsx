@@ -20,8 +20,8 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [hospitalName, setHospitalName] = useState('GDGDemo Hospital — Al-Noor Clinic');
-  const [cnic, setCnic] = useState('42101-1234567-1');
-  const [password, setPassword] = useState('password123');
+  const [cnic, setCnic] = useState('');
+  const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('doctor');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,13 +34,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
-    if (role === 'admin') {
-      setCnic('42101-0000000-0');
-    } else if (role === 'doctor') {
-      setCnic('42101-1234567-1');
-    } else {
-      setCnic('42101-9876543-2');
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -191,33 +184,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             )}
           </button>
         </form>
-
-        {/* Quick Demo Pre-fill Links */}
-        <div className="mt-5 pt-4 border-t border-[#DCE6E2] text-center">
-          <div className="text-[11px] text-[#7C8F87] mb-2 font-mono-tabular">Quick Demo Sign In:</div>
-          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-[#0F5C56]">
-            <button
-              onClick={() => handleRoleSelect('doctor')}
-              className="hover:underline cursor-pointer px-2 py-1 rounded-md bg-[#E5F0EE]"
-            >
-              Dr. Ahmed Raza (Doctor)
-            </button>
-            <span>·</span>
-            <button
-              onClick={() => handleRoleSelect('patient')}
-              className="hover:underline cursor-pointer px-2 py-1 rounded-md bg-[#E5F0EE]"
-            >
-              Fatima (Customer)
-            </button>
-            <span>·</span>
-            <button
-              onClick={() => handleRoleSelect('admin')}
-              className="hover:underline cursor-pointer px-2 py-1 rounded-md bg-[#E5F0EE]"
-            >
-              Admin
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Footer Copy */}
