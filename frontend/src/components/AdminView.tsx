@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DoctorRecord, CustomerRecord, AdminTab } from '../types';
+import { PWAInstallBanner } from './ui/PWAInstallBanner';
 import {
   ShieldCheck,
   Stethoscope,

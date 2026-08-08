@@ -81,6 +81,34 @@ export default function App() {
     sendWhatsApp(patient);
   };
 
+  const isPatient = userRole === 'patient';
+  const isAdmin = userRole === 'admin';
+  const isDoctor = userRole === 'doctor';
+
+  // Customer role view rendering
+  if (isPatient) {
+    return (
+      <div className="min-h-screen bg-[#F4F7F6] text-[#142420] font-sans antialiased flex flex-col">
+        <OfflineBanner />
+        <Topbar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          queueCount={0}
+          userRole={userRole}
+          onOpenNewPatientModal={() => {}}
+          onLogout={logoutUser}
+        />
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl w-full mx-auto">
+          <PatientPortalView
+            patient={selectedPatient || patients[0] || null}
+            currentUser={currentUser}
+            hospitalName={currentUser?.hospitalName}
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F4F7F6] text-[#142420] font-sans antialiased flex flex-col md:flex-row pb-16 md:pb-0">
       {/* Sidebar Desktop */}
@@ -91,6 +119,8 @@ export default function App() {
           queueCount={todayQueue.length}
           patientsCount={patients.length}
           followupsCount={followups.length}
+          userRole={userRole}
+          currentUser={currentUser}
           onOpenNewPatientModal={() => setIsNewPatientModalOpen(true)}
         />
       </div>
@@ -111,8 +141,8 @@ export default function App() {
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {/* TODAY'S QUEUE VIEW */}
-          {activeView === 'today' && (
+          {/* TODAY'S QUEUE VIEW (Doctor Only) */}
+          {activeView === 'today' && isDoctor && (
             <TodayQueueView
               queue={todayQueue}
               onSelectPatient={(p) => setSelectedPatient(p)}
@@ -121,8 +151,8 @@ export default function App() {
             />
           )}
 
-          {/* ALL PATIENTS VIEW */}
-          {activeView === 'patients' && (
+          {/* ALL PATIENTS VIEW (Doctor Only) */}
+          {activeView === 'patients' && isDoctor && (
             <PatientsView
               patients={allPatientsList}
               onSelectPatient={(p) => setSelectedPatient(p)}
@@ -130,7 +160,7 @@ export default function App() {
             />
           )}
 
-          {/* FOLLOW-UPS LOG VIEW */}
+          {/* FOLLOW-UPS LOG VIEW (Doctor & Admin) */}
           {activeView === 'followups' && (
             <FollowupsView
               followups={followups}
@@ -140,8 +170,8 @@ export default function App() {
             />
           )}
 
-          {/* ADMIN CONTROL PANEL */}
-          {activeView === 'admin' && (
+          {/* ADMIN CONTROL PANEL (Admin Only) */}
+          {activeView === 'admin' && isAdmin && (
             <AdminView
               doctors={doctors}
               customers={customers}
@@ -150,16 +180,8 @@ export default function App() {
             />
           )}
 
-          {/* CUSTOMER / PATIENT PORTAL */}
-          {activeView === 'patient-portal' && (
-            <PatientPortalView
-              patient={selectedPatient || patients[0] || null}
-              hospitalName={currentUser?.hospitalName}
-            />
-          )}
-
-          {/* SETTINGS VIEW */}
-          {activeView === 'settings' && <SettingsView />}
+          {/* SETTINGS VIEW (Doctor & Admin) */}
+          {activeView === 'settings' && <SettingsView userRole={userRole} />}
         </main>
       </div>
 
@@ -170,6 +192,7 @@ export default function App() {
         queueCount={todayQueue.length}
         patientsCount={patients.length}
         followupsCount={followups.length}
+        userRole={userRole}
       />
 
       {/* Patient Detail Drawer */}
