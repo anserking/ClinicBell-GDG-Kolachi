@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sehatloop-v1';
+const CACHE_NAME = 'sehatloop-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -37,10 +37,13 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - Cache-first with Network fallback for static assets
 self.addEventListener('fetch', (event) => {
+  // Only process GET requests over http/https
+  if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
 
-  // Skip API requests from service worker caching
-  if (url.pathname.startsWith('/api/')) {
+  // Skip non-http/https (e.g. chrome-extension://, blob:, data:) and API requests
+  if (!url.protocol.startsWith('http') || url.pathname.startsWith('/api/')) {
     return;
   }
 
