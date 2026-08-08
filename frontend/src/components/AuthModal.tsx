@@ -122,9 +122,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
           </div>
 
           <div>
-            <label className="block font-semibold text-[#142420] mb-1">CNIC Number</label>
+            <label className="block font-bold text-[#142420] mb-1">CNIC Number</label>
             <div className="relative">
-              <User className="w-4 h-4 text-[#7C8F87] absolute left-3 top-1/2 -translate-y-1/2" />
+              <User className="w-4 h-4 text-[#7C8F87] absolute left-3 top-1/2 -translate-y-1/2 z-10" />
               <input
                 type="text"
                 value={cnic}
@@ -132,22 +132,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
                 placeholder="42101-1234567-1"
                 maxLength={18}
                 required
-                className="w-full pl-9 pr-3 py-2.5 bg-[#F4F7F6] border border-[#DCE6E2] rounded-xl font-mono-tabular text-[#142420] focus:outline-none focus:border-[#0F5C56]"
+                className="w-full pl-9 pr-3 py-2.5 bg-white border-2 border-[#DCE6E2] rounded-xl font-mono-tabular text-[#142420] placeholder:text-[#7C8F87] focus:outline-none focus:border-[#0F5C56] font-semibold"
+                style={{ color: '#142420' }}
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-semibold text-[#142420] mb-1">Account Password</label>
+            <label className="block font-bold text-[#142420] mb-1">Account Password</label>
             <div className="relative">
-              <Key className="w-4 h-4 text-[#7C8F87] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Key className="w-4 h-4 text-[#7C8F87] absolute left-3 top-1/2 -translate-y-1/2 z-10" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full pl-9 pr-3 py-2.5 bg-[#F4F7F6] border border-[#DCE6E2] rounded-xl text-[#142420] focus:outline-none focus:border-[#0F5C56]"
+                className="w-full pl-9 pr-3 py-2.5 bg-white border-2 border-[#DCE6E2] rounded-xl text-[#142420] placeholder:text-[#7C8F87] focus:outline-none focus:border-[#0F5C56] font-semibold"
+                style={{ color: '#142420' }}
               />
             </div>
           </div>

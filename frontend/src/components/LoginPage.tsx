@@ -118,13 +118,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm">
           <div>
-            <label className="block font-semibold text-[#142420] mb-1.5">Select Hospital Node</label>
+            <label className="block font-bold text-[#142420] mb-1.5">Select Hospital Node</label>
             <div className="relative">
-              <Building2 className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Building2 className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
               <select
                 value={hospitalName}
                 onChange={(e) => setHospitalName(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-[#F4F7F6] border border-[#DCE6E2] rounded-xl text-[#142420] focus:outline-none focus:border-[#0F5C56] font-medium"
+                className="w-full pl-10 pr-4 py-3 bg-white border-2 border-[#DCE6E2] rounded-xl text-[#142420] focus:outline-none focus:border-[#0F5C56] font-semibold text-xs sm:text-sm shadow-xs"
+                style={{ color: '#142420' }}
               >
                 <option value="GDGDemo Hospital — Al-Noor Clinic">GDGDemo Hospital — Al-Noor Clinic</option>
                 <option value="Shifa Medical Complex">Shifa Medical Complex</option>
@@ -134,9 +135,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </div>
 
           <div>
-            <label className="block font-semibold text-[#142420] mb-1.5">CNIC Number</label>
+            <label className="block font-bold text-[#142420] mb-1.5">CNIC Number</label>
             <div className="relative">
-              <User className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <User className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
               <input
                 type="text"
                 value={cnic}
@@ -144,22 +145,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 placeholder="42101-1234567-1"
                 maxLength={18}
                 required
-                className="w-full pl-10 pr-4 py-3 bg-[#F4F7F6] border border-[#DCE6E2] rounded-xl font-mono-tabular text-[#142420] focus:outline-none focus:border-[#0F5C56]"
+                className="w-full pl-10 pr-4 py-3 bg-white border-2 border-[#DCE6E2] rounded-xl font-mono-tabular text-[#142420] placeholder:text-[#7C8F87] focus:outline-none focus:border-[#0F5C56] font-semibold text-xs sm:text-sm shadow-xs"
+                style={{ color: '#142420' }}
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-semibold text-[#142420] mb-1.5">Password</label>
+            <label className="block font-bold text-[#142420] mb-1.5">Password</label>
             <div className="relative">
-              <Lock className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full pl-10 pr-4 py-3 bg-[#F4F7F6] border border-[#DCE6E2] rounded-xl text-[#142420] focus:outline-none focus:border-[#0F5C56]"
+                className="w-full pl-10 pr-4 py-3 bg-white border-2 border-[#DCE6E2] rounded-xl text-[#142420] placeholder:text-[#7C8F87] focus:outline-none focus:border-[#0F5C56] font-semibold text-xs sm:text-sm shadow-xs"
+                style={{ color: '#142420' }}
               />
             </div>
           </div>
