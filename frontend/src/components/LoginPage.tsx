@@ -120,7 +120,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           <div>
             <label className="block font-bold text-[#142420] mb-1.5">Select Hospital Node</label>
             <div className="relative">
-              <Building2 className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
+              <Building2 className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
               <select
                 value={hospitalName}
                 onChange={(e) => setHospitalName(e.target.value)}
@@ -137,13 +137,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           <div>
             <label className="block font-bold text-[#142420] mb-1.5">CNIC Number</label>
             <div className="relative">
-              <User className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
+              <User className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
               <input
                 type="text"
                 value={cnic}
-                onChange={(e) => setCnic(formatCnicInput(e.target.value))}
+                onChange={(e) => setCnic(e.target.value)}
                 placeholder="42101-1234567-1"
-                maxLength={18}
+                maxLength={20}
                 required
                 className="w-full pl-10 pr-4 py-3 bg-white border-2 border-[#DCE6E2] rounded-xl font-mono-tabular text-[#142420] placeholder:text-[#7C8F87] focus:outline-none focus:border-[#0F5C56] font-semibold text-xs sm:text-sm shadow-xs"
                 style={{ color: '#142420' }}
@@ -154,7 +154,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           <div>
             <label className="block font-bold text-[#142420] mb-1.5">Password</label>
             <div className="relative">
-              <Lock className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
+              <Lock className="w-4.5 h-4.5 text-[#7C8F87] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
               <input
                 type="password"
                 value={password}

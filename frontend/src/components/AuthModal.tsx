@@ -124,13 +124,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
           <div>
             <label className="block font-bold text-[#142420] mb-1">CNIC Number</label>
             <div className="relative">
-              <User className="w-4 h-4 text-[#7C8F87] absolute left-3 top-1/2 -translate-y-1/2 z-10" />
+              <User className="w-4 h-4 text-[#7C8F87] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
               <input
                 type="text"
                 value={cnic}
-                onChange={(e) => setCnic(formatCnicInput(e.target.value))}
+                onChange={(e) => setCnic(e.target.value)}
                 placeholder="42101-1234567-1"
-                maxLength={18}
+                maxLength={20}
                 required
                 className="w-full pl-9 pr-3 py-2.5 bg-white border-2 border-[#DCE6E2] rounded-xl font-mono-tabular text-[#142420] placeholder:text-[#7C8F87] focus:outline-none focus:border-[#0F5C56] font-semibold"
                 style={{ color: '#142420' }}
@@ -141,7 +141,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
           <div>
             <label className="block font-bold text-[#142420] mb-1">Account Password</label>
             <div className="relative">
-              <Key className="w-4 h-4 text-[#7C8F87] absolute left-3 top-1/2 -translate-y-1/2 z-10" />
+              <Key className="w-4 h-4 text-[#7C8F87] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
               <input
                 type="password"
                 value={password}
