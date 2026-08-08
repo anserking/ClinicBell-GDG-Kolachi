@@ -88,14 +88,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         hospitalName: data.user.hospitalName,
         role: data.user.role
       });
-    } catch (err) {
-      // Fallback for offline PWA mode if local demo matching succeeds
-      onLogin({
-        cnic: cnic.trim(),
-        password: password.trim(),
-        hospitalName,
-        role: selectedRole
-      });
+    } catch (err: any) {
+      setErrorMsg('Unable to connect to hospital authentication server. Please check your network connection.');
     } finally {
       setIsLoading(false);
     }
