@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 const router = Router();
 
-// Helper to call OpenRouter API with google/gemini-2.0-flash-001 model
+// Helper to call OpenRouter API with google/gemini-2.0-flash-lite-001 or google/gemini-flash-1.5 model
 const callOpenRouter = async (messages: any[]): Promise<any | null> => {
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY || '';
   if (!apiKey || apiKey === 'your_google_gemini_api_key_here') {
@@ -10,41 +10,51 @@ const callOpenRouter = async (messages: any[]): Promise<any | null> => {
     return null;
   }
 
-  console.log('[OpenRouter API] Calling OpenRouter with model google/gemini-2.0-flash-001...');
-  try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://clinicbell.netlify.app',
-        'X-Title': 'ClinicBell'
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-001',
-        messages,
-        response_format: { type: 'json_object' }
-      })
-    });
+  // Model list to try in order of preference on OpenRouter
+  const candidateModels = [
+    'google/gemini-2.0-flash-lite-001',
+    'google/gemini-flash-1.5',
+    'google/gemini-2.0-flash-exp:free'
+  ];
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('[OpenRouter API Error]:', res.status, errText);
-      return null;
-    }
-
-    const json = await res.json();
-    const contentStr = json?.choices?.[0]?.message?.content || '{}';
+  for (const model of candidateModels) {
     try {
-      return JSON.parse(contentStr);
-    } catch (e) {
-      console.warn('[OpenRouter API] Failed to parse JSON response content:', contentStr);
-      return { text: contentStr };
+      console.log(`[OpenRouter API] Calling OpenRouter with model ${model}...`);
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://clinicbell.netlify.app',
+          'X-Title': 'ClinicBell'
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        const contentStr = json?.choices?.[0]?.message?.content || '{}';
+        try {
+          return JSON.parse(contentStr);
+        } catch (e) {
+          console.warn('[OpenRouter API] Response content was string, not JSON:', contentStr);
+          return { prescription: contentStr, text: contentStr };
+        }
+      } else {
+        const errText = await res.text();
+        console.warn(`[OpenRouter API] Model ${model} returned HTTP ${res.status}: ${errText}. Trying fallback model...`);
+      }
+    } catch (err: any) {
+      console.warn(`[OpenRouter API] Exception calling ${model}:`, err?.message || err);
     }
-  } catch (err: any) {
-    console.error('[OpenRouter API Exception]:', err?.message || err);
-    return null;
   }
+
+  console.error('[OpenRouter API] All candidate models failed to return a response.');
+  return null;
 };
 
 // GET Route handlers to prevent 404/Cannot GET errors in browser testing
@@ -93,11 +103,10 @@ Extract and return clean JSON with:
     ]);
 
     if (!parsed) {
-      // Fallback structuring if API key is not set or request fails
       return res.json({
-        diagnosis: 'Clinical Visit Examination',
+        diagnosis: 'Clinical Examination',
         prescription: noteText,
-        advice: 'Take medications as directed and stay hydrated.',
+        advice: 'Take medications as directed.',
         whatsappMessage: `Assalam-o-Alaikum ${patientName || 'Patient'}, this is GDGDemo Hospital following up on your visit today. How are you feeling now? Please let us know if you need any assistance.`
       });
     }
@@ -135,14 +144,14 @@ router.post('/scan-prescription', async (req, res) => {
       ? imageBase64
       : `data:image/jpeg;base64,${imageBase64}`;
 
-    const visionPrompt = `You are an expert medical OCR specialist trained in deciphering challenging handwritten doctor notes, prescriptions, and medical slips.
+    const visionPrompt = `You are an expert medical OCR specialist trained in deciphering handwritten doctor notes, prescriptions, and medical slips.
 Examine this image carefully. Transcribe and decipher all handwritten patient details, medical diagnosis, and prescribed medications.
 
 Format response into valid JSON with keys:
 {
-  "diagnosis": "Deciphered medical condition or main clinical observation",
-  "prescription": "Formatted list of prescribed medications with dosages, timings, and duration (e.g. 1. Tab Panadol 500mg — 1-1-1 after meals x 3 days)",
-  "advice": "General patient advice or instructions"
+  "diagnosis": "Deciphered medical condition or main text read from image",
+  "prescription": "Formatted list of prescribed medications or deciphered text read from image",
+  "advice": "General patient advice or care instructions"
 }`;
 
     const parsed = await callOpenRouter([
@@ -162,23 +171,23 @@ Format response into valid JSON with keys:
 
     if (!parsed) {
       return res.json({
-        diagnosis: 'Deciphered Doctor Handwritten Note',
-        prescription: '1. Tab Paracetamol 500mg — (1-1-1) After meals x 3 days\n2. Syr Hydryllin — 2 tsp thrice daily x 5 days',
-        advice: 'Rest and increase fluid intake.'
+        diagnosis: 'Prescription OCR Image Read',
+        prescription: 'Deciphered Image Content:\n1. Check OPENROUTER_API_KEY environment variable on Render backend to enable live AI vision OCR.',
+        advice: 'Verify OPENROUTER_API_KEY setting.'
       });
     }
 
     return res.json({
-      diagnosis: parsed.diagnosis || 'Deciphered Doctor Note',
-      prescription: parsed.prescription || parsed.text || 'Prescription deciphered from image.',
+      diagnosis: parsed.diagnosis || 'Prescription OCR Image Read',
+      prescription: parsed.prescription || parsed.text || 'Deciphered text from image.',
       advice: parsed.advice || 'Follow instructions on prescription.'
     });
   } catch (error: any) {
     console.error('Error scanning prescription image with OpenRouter Gemini Vision:', error);
     return res.json({
-      diagnosis: 'Deciphered Doctor Handwritten Note',
-      prescription: '1. Tab Paracetamol 500mg — (1-1-1) After meals x 3 days\n2. Syr Hydryllin — 2 tsp thrice daily x 5 days',
-      advice: 'Rest and increase fluid intake.'
+      diagnosis: 'Prescription OCR Processing Error',
+      prescription: 'Unable to process image. Please ensure the image is clear and try again.',
+      advice: 'Retake photo if needed.'
     });
   }
 });
