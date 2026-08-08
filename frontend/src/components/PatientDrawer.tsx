@@ -55,6 +55,8 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionRef = useRef<any>(null);
 
+  const [speechError, setSpeechError] = useState<string | null>(null);
+
   // Synchronize when patient changes
   useEffect(() => {
     if (!patient) return;
@@ -69,40 +71,31 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
     setParsedDiagnosis('');
     setParsedPrescription('');
     setSavedSuccess(false);
+    setSpeechError(null);
   }, [patient?.id]);
 
-  // Handle Speech Recognition if supported in browser
-  const startRecording = async () => {
-    try {
-      setRecordingTime(0);
-      setIsRecording(true);
-      audioChunksRef.current = [];
+  // Handle Speech Recognition cleanly
+  const startRecording = () => {
+    setSpeechError(null);
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-      // 1. Request microphone access
+    if (SpeechRecognition) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
-          }
-        };
-        mediaRecorder.start();
-      } catch (micErr) {
-        console.warn('MediaRecorder / Mic stream access warning:', micErr);
-      }
-
-      // 2. Web Speech Recognition if available
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-      if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         recognition.continuous = !isIOS;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+          setIsRecording(true);
+          setRecordingTime(0);
+          if (timerRef.current) clearInterval(timerRef.current);
+          timerRef.current = setInterval(() => {
+            setRecordingTime((prev) => prev + 1);
+          }, 1000);
+        };
 
         recognition.onresult = (event: any) => {
           let fullTranscript = '';
@@ -115,27 +108,40 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
         };
 
         recognition.onerror = (event: any) => {
-          console.warn('SpeechRecognition error:', event.error);
+          console.warn('[SpeechRecognition] error event:', event.error);
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            setSpeechError('Microphone permission blocked. Please allow mic access in your browser settings.');
+          } else if (event.error !== 'no-speech') {
+            setSpeechError(`Voice dictation note: ${event.error}`);
+          }
+          stopRecording();
         };
 
-        try {
-          recognition.start();
-          recognitionRef.current = recognition;
-        } catch (recErr) {
-          console.warn('Recognition start failed:', recErr);
-        }
-      }
+        recognition.onend = () => {
+          setIsRecording(false);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+        };
 
-      // Timer counter
-      timerRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-    } catch (err) {
-      console.warn('Microphone access fallback:', err);
-      setIsRecording(true);
-      timerRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
+        recognition.start();
+        recognitionRef.current = recognition;
+        return;
+      } catch (err) {
+        console.warn('[SpeechRecognition] Failed to initialize:', err);
+      }
+    }
+
+    // Fallback if SpeechRecognition is unavailable in browser environment
+    setIsRecording(true);
+    setRecordingTime(0);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setRecordingTime((prev) => prev + 1);
+    }, 1000);
+
+    if (!audioTranscript) {
       setAudioTranscript(
         'Patient presents with mild throat infection and fever 101°F. Prescribe Augmentin 625mg twice daily for 5 days and Panadol Extra.'
       );
@@ -144,17 +150,15 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
 
   const stopRecording = () => {
     setIsRecording(false);
-    if (timerRef.current) clearInterval(timerRef.current);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
       } catch (e) {}
-    }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      try {
-        mediaRecorderRef.current.stop();
-        mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
-      } catch (e) {}
+      recognitionRef.current = null;
     }
   };
 
@@ -348,6 +352,12 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {speechError && (
+                  <div className="bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 rounded-lg text-xs font-medium">
+                    {speechError}
+                  </div>
+                )}
 
                 {/* Simulated Audio Waveform Visualizer */}
                 {isRecording && (
