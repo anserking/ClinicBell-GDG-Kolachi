@@ -29,7 +29,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    const apiBase = import.meta.env.VITE_API_BASE_URL;
     fetch(`${apiBase}/api/hospitals`)
       .then((res) => res.json())
       .then((data) => {
@@ -38,7 +38,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           setHospitalName(data[0].name);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const formatCnicInput = (val: string) => {
@@ -94,11 +94,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           <button
             type="button"
             onClick={() => handleRoleSelect('doctor')}
-            className={`flex-1 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              selectedRole === 'doctor'
+            className={`flex-1 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${selectedRole === 'doctor'
                 ? 'bg-[#0F5C56] text-white shadow-sm'
                 : 'text-[#4E6259] hover:text-[#142420]'
-            }`}
+              }`}
           >
             <Stethoscope className="w-4 h-4" />
             <span>Doctor</span>
@@ -107,11 +106,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           <button
             type="button"
             onClick={() => handleRoleSelect('patient')}
-            className={`flex-1 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              selectedRole === 'patient'
+            className={`flex-1 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${selectedRole === 'patient'
                 ? 'bg-[#0F5C56] text-white shadow-sm'
                 : 'text-[#4E6259] hover:text-[#142420]'
-            }`}
+              }`}
           >
             <Users className="w-4 h-4" />
             <span>Customer</span>
@@ -120,11 +118,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           <button
             type="button"
             onClick={() => handleRoleSelect('admin')}
-            className={`flex-1 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              selectedRole === 'admin'
+            className={`flex-1 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${selectedRole === 'admin'
                 ? 'bg-[#0F5C56] text-white shadow-sm'
                 : 'text-[#4E6259] hover:text-[#142420]'
-            }`}
+              }`}
           >
             <ShieldCheck className="w-4 h-4" />
             <span>Admin</span>
