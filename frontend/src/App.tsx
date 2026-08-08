@@ -12,6 +12,7 @@ import { SettingsView } from './components/SettingsView';
 import { AdminView } from './components/AdminView';
 import { PatientPortalView } from './components/PatientPortalView';
 import { AuthModal } from './components/AuthModal';
+import { LoginPage } from './components/LoginPage';
 import { PatientDrawer } from './components/PatientDrawer';
 import { NewPatientModal } from './components/NewPatientModal';
 
@@ -26,6 +27,7 @@ export default function App() {
     selectedPatient,
     isNewPatientModalOpen,
     isAuthModalOpen,
+    isAuthenticated,
     userRole,
     currentUser,
 
@@ -35,6 +37,7 @@ export default function App() {
     setIsNewPatientModalOpen,
     setIsAuthModalOpen,
     loginUser,
+    logoutUser,
     addDoctor,
     addCustomer,
     addPatient,
@@ -44,6 +47,16 @@ export default function App() {
   } = useAppStore();
 
   const todayStr = new Date().toISOString().split('T')[0];
+
+  if (!isAuthenticated) {
+    return (
+      <LoginPage
+        onLogin={(dto) => {
+          loginUser(dto.cnic, dto.role, dto.hospitalName);
+        }}
+      />
+    );
+  }
 
   // Search filter
   const filterPatient = (patient: typeof patients[0]) => {
@@ -94,6 +107,7 @@ export default function App() {
           userRole={userRole}
           onOpenNewPatientModal={() => setIsNewPatientModalOpen(true)}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          onLogout={logoutUser}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">

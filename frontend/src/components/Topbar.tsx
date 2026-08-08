@@ -9,6 +9,7 @@ interface TopbarProps {
   userRole?: UserRole;
   onOpenNewPatientModal: () => void;
   onOpenAuthModal?: () => void;
+  onLogout?: () => void;
   onToggleMobileSidebar?: () => void;
 }
 
@@ -19,6 +20,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   userRole = 'doctor',
   onOpenNewPatientModal,
   onOpenAuthModal,
+  onLogout,
   onToggleMobileSidebar
 }) => {
   const currentDateFormatted = new Date().toLocaleDateString('en-US', {
@@ -59,6 +61,14 @@ export const Topbar: React.FC<TopbarProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 font-semibold text-xs md:text-sm py-2 px-3 rounded-xl transition-all border border-red-200 cursor-pointer"
+          >
+            <span>Log Out</span>
+          </button>
+        )}
         {onOpenAuthModal && (
           <button
             onClick={onOpenAuthModal}

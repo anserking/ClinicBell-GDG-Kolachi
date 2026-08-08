@@ -107,6 +107,7 @@ export interface AppState {
   isNewPatientModalOpen: boolean;
   isMobileSidebarOpen: boolean;
   isAuthModalOpen: boolean;
+  isAuthenticated: boolean;
   userRole: UserRole;
   currentUser: User | null;
 
@@ -118,6 +119,7 @@ export interface AppState {
   setIsMobileSidebarOpen: (isOpen: boolean) => void;
   setIsAuthModalOpen: (isOpen: boolean) => void;
   loginUser: (cnic: string, role: UserRole, hospitalName: string) => void;
+  logoutUser: () => void;
   addDoctor: (doctor: Omit<DoctorRecord, 'id' | 'registeredAt'>, password: string) => void;
   addCustomer: (customer: Omit<CustomerRecord, 'id' | 'registeredAt'>, password: string) => void;
   addPatient: (newPatient: Patient) => void;
@@ -142,16 +144,9 @@ class Store {
       isNewPatientModalOpen: false,
       isMobileSidebarOpen: false,
       isAuthModalOpen: false,
+      isAuthenticated: false,
       userRole: 'doctor',
-      currentUser: {
-        id: 'u-doc-1',
-        cnic: '42101-1234567-1',
-        name: 'Dr. Ahmed Raza',
-        phone: '+92 300 1234567',
-        role: 'doctor',
-        hospitalName: 'GDGDemo Hospital — Al-Noor Clinic',
-        specialty: 'General Medicine'
-      },
+      currentUser: null,
 
       setActiveView: (view) => this.setState({ activeView: view, isMobileSidebarOpen: false }),
       setSearchQuery: (query) => this.setState({ searchQuery: query }),
@@ -179,7 +174,6 @@ class Store {
         if (role === 'admin') targetView = 'admin';
         if (role === 'patient') targetView = 'patient-portal';
 
-        // Find patient if logging in as patient
         let matchedPatient = this.state.selectedPatient;
         if (role === 'patient') {
           matchedPatient = this.state.patients[0] || null;
@@ -188,8 +182,17 @@ class Store {
         this.setState({
           currentUser: user,
           userRole: role,
+          isAuthenticated: true,
           activeView: targetView,
           selectedPatient: matchedPatient
+        });
+      },
+
+      logoutUser: () => {
+        this.setState({
+          currentUser: null,
+          isAuthenticated: false,
+          activeView: 'today'
         });
       },
 
