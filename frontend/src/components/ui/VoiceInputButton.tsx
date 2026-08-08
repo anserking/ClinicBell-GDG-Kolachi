@@ -6,12 +6,14 @@ import { getApiBaseUrl } from '../../config';
 interface VoiceInputButtonProps {
   onTranscriptChange: (text: string) => void;
   patientName?: string;
+  label?: string;
   placeholder?: string;
 }
 
 export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
   onTranscriptChange,
   patientName = 'Patient',
+  label = 'Voice Dictate',
   placeholder = 'Speak your note aloud...'
 }) => {
   const { isListening, transcript, isSupported, startListening, stopListening } = useVoiceInput();
@@ -69,12 +71,11 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
       <button
         type="button"
         onClick={toggleMic}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-          isListening
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${isListening
             ? 'bg-red-500 text-white animate-pulse shadow-md'
             : 'bg-[#0F5C56]/10 text-[#0F5C56] hover:bg-[#0F5C56] hover:text-white border border-[#0F5C56]/20'
-        }`}
-        title={isListening ? 'Stop Recording' : 'Start Voice Dictation'}
+          }`}
+        title={isListening ? 'Stop Recording' : label}
       >
         {isListening ? (
           <>
@@ -84,7 +85,7 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
         ) : (
           <>
             <Mic className="w-3.5 h-3.5" />
-            <span>Voice Dictate</span>
+            <span>{label}</span>
           </>
         )}
       </button>

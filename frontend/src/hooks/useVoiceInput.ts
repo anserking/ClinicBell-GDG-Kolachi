@@ -17,15 +17,18 @@ export function useVoiceInput() {
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US'; // Supports English & Romanized Urdu dictation
+    recognition.interimResults = false; // Disable interim guesses to eliminate word/character repetition
+    recognition.lang = 'en-US';
 
     recognition.onresult = (event: any) => {
-      let currentTranscript = '';
+      let finalTranscript = '';
       for (let i = 0; i < event.results.length; i++) {
-        currentTranscript += event.results[i][0].transcript;
+        finalTranscript += event.results[i][0].transcript + ' ';
       }
-      setTranscript(currentTranscript);
+      const cleaned = finalTranscript.trim();
+      if (cleaned) {
+        setTranscript(cleaned);
+      }
     };
 
     recognition.onerror = (event: any) => {
@@ -43,7 +46,7 @@ export function useVoiceInput() {
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
-        } catch (e) {}
+        } catch (e) { }
       }
     };
   }, []);

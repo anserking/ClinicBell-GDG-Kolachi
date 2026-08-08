@@ -316,22 +316,20 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
               </div>
             </div>
 
-            {/* Voice Dictation Button Bar */}
-            <VoiceInputButton
-              onTranscriptChange={(text) => {
-                if (inputMode === 'voice') setAudioTranscript(text);
-                else setTypedText(text);
-              }}
-              patientName={patient.name}
-            />
-
-            {/* Structured Medication Prescription Form */}
-            <PrescriptionForm
-              initialItems={structuredMedicines}
-              onPrescriptionChange={(formattedText) => {
-                setParsedPrescription(formattedText);
-              }}
-            />
+            {/* Voice Dictation Button for Prescription */}
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold text-[#4E6259] uppercase tracking-wider block">
+                Prescription &amp; Clinical Notes Voice Dictation:
+              </span>
+              <VoiceInputButton
+                label="🎙️ Voice Dictate Prescription & Notes"
+                onTranscriptChange={(text) => {
+                  setParsedPrescription(text);
+                  setAudioTranscript(text);
+                }}
+                patientName={patient.name}
+              />
+            </div>
 
             {/* Input Panels */}
             {inputMode === 'voice' ? (
@@ -504,13 +502,18 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-[#0F5C34]">
-                    WhatsApp Message Preview:
+                  <label className="text-[11px] font-semibold text-[#0F5C34] block">
+                    WhatsApp Message &amp; Voice Dictation:
                   </label>
+                  <VoiceInputButton
+                    label="🎙️ Voice Dictate WhatsApp Follow-up Message"
+                    onTranscriptChange={(text) => setWhatsappMsg(text)}
+                    patientName={patient.name}
+                  />
                   <textarea
                     value={whatsappMsg}
                     onChange={(e) => setWhatsappMsg(e.target.value)}
-                    className="w-full h-20 p-2.5 bg-white border border-[#C7EDD5] rounded-xl text-xs text-[#142420] focus:outline-none focus:border-[#25D366]"
+                    className="w-full h-20 p-2.5 bg-white border border-[#C7EDD5] rounded-xl text-xs text-[#142420] focus:outline-none focus:border-[#25D366] font-mono-tabular"
                   />
                 </div>
 

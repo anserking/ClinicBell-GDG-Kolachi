@@ -19,20 +19,16 @@ router.post('/login-cnic', async (req, res) => {
     // Lookup user by CNIC in Neon DB
     const result = await pool.query('SELECT * FROM users WHERE cnic = $1', [cnic]);
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid CNIC or Password. Account not found in database.' });
-    }
-
+    // Secure authentication check (generic error to prevent CNIC/role enumeration attacks)
     const user = result.rows[0];
+    const genericAuthError = 'Invalid CNIC, password, or role selected. Please check your credentials.';
 
-    // Check password
-    if (user.password_hash && user.password_hash !== password) {
-      return res.status(401).json({ error: 'Invalid CNIC or Password. Credentials do not match.' });
-    }
-
-    // Check role match if specified
-    if (role && user.role && user.role.toLowerCase() !== role.toLowerCase()) {
-      return res.status(403).json({ error: `Account exists as ${user.role.toUpperCase()}, but you selected ${role.toUpperCase()}. Please switch tabs.` });
+    if (
+      result.rows.length === 0 ||
+      (user && user.password_hash && user.password_hash !== password) ||
+      (user && role && user.role && user.role.toLowerCase() !== role.toLowerCase())
+    ) {
+      return res.status(401).json({ error: genericAuthError });
     }
 
     // Sign 24-Hour JWT Token
