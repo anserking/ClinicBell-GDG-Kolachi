@@ -19,18 +19,18 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-  const [hospitals, setHospitals] = useState<Array<{ id: string; name: string; code: string }>>([
-    { id: 'hosp-gdg-01', name: 'GDGDemo Hospital — Al-Noor Clinic', code: 'GDGDemo' }
-  ]);
-  const [hospitalName, setHospitalName] = useState('GDGDemo Hospital — Al-Noor Clinic');
+  const [hospitals, setHospitals] = useState<Array<{ id: string; name: string; code: string }>>([]);
+  const [hospitalName, setHospitalName] = useState('');
   const [cnic, setCnic] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('doctor');
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingHospitals, setIsFetchingHospitals] = useState(true);
 
   useEffect(() => {
     const rawBase = import.meta.env.VITE_API_BASE_URL || 'https://clinicbell-backend.onrender.com';
     const apiBase = rawBase.replace(/\/+$/, '');
+    setIsFetchingHospitals(true);
     fetch(`${apiBase}/api/hospitals`)
       .then((res) => res.json())
       .then((data) => {
@@ -41,6 +41,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       })
       .catch((err) => {
         console.warn('Failed to fetch hospital list from backend:', err);
+      })
+      .finally(() => {
+        setIsFetchingHospitals(false);
       });
   }, []);
 
@@ -178,14 +181,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <select
                 value={hospitalName}
                 onChange={(e) => setHospitalName(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white border-2 border-[#DCE6E2] rounded-xl text-[#142420] focus:outline-none focus:border-[#0F5C56] font-semibold text-xs sm:text-sm shadow-xs"
+                disabled={isFetchingHospitals}
+                className="w-full pl-10 pr-4 py-3 bg-white border-2 border-[#DCE6E2] rounded-xl text-[#142420] focus:outline-none focus:border-[#0F5C56] font-semibold text-xs sm:text-sm shadow-xs disabled:opacity-60"
                 style={{ color: '#142420' }}
               >
-                {hospitals.map((h) => (
-                  <option key={h.id} value={h.name}>
-                    {h.name}
-                  </option>
-                ))}
+                {isFetchingHospitals ? (
+                  <option value="">Connecting to database node...</option>
+                ) : hospitals.length === 0 ? (
+                  <option value="">No registered hospital nodes found</option>
+                ) : (
+                  hospitals.map((h) => (
+                    <option key={h.id} value={h.name}>
+                      {h.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           </div>
