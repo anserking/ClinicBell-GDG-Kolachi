@@ -78,48 +78,60 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
       setIsRecording(true);
       audioChunksRef.current = [];
 
-      // Web Speech Recognition if available
+      // 1. Request microphone access
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+        mediaRecorder.start();
+      } catch (micErr) {
+        console.warn('MediaRecorder / Mic stream access warning:', micErr);
+      }
+
+      // 2. Web Speech Recognition if available
       const SpeechRecognition =
         (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
-        recognition.continuous = true;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        recognition.continuous = !isIOS;
         recognition.interimResults = true;
-        recognition.lang = 'en-US'; // Supports mixed dictation
+        recognition.lang = 'en-US';
 
         recognition.onresult = (event: any) => {
-          let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
+          let fullTranscript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            fullTranscript += event.results[i][0].transcript;
           }
-          setAudioTranscript(transcript);
+          if (fullTranscript.trim()) {
+            setAudioTranscript(fullTranscript);
+          }
         };
 
-        recognition.start();
-        recognitionRef.current = recognition;
+        recognition.onerror = (event: any) => {
+          console.warn('SpeechRecognition error:', event.error);
+        };
+
+        try {
+          recognition.start();
+          recognitionRef.current = recognition;
+        } catch (recErr) {
+          console.warn('Recognition start failed:', recErr);
+        }
       }
 
       // Timer counter
       timerRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
-
-      // MediaRecorder for mic stream
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.start();
     } catch (err) {
       console.warn('Microphone access fallback:', err);
-      // Fallback simulated audio transcript if browser blocks hardware mic in sandbox
       setIsRecording(true);
       timerRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
@@ -139,8 +151,10 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
       } catch (e) {}
     }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+      try {
+        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+      } catch (e) {}
     }
   };
 
