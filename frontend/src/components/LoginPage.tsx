@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types';
 import { LoginRequestDto } from '../dtos';
+import { getApiBaseUrl } from '../config';
 import {
   ShieldCheck,
   Building2,
@@ -28,8 +29,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [isFetchingHospitals, setIsFetchingHospitals] = useState(true);
 
   useEffect(() => {
-    const rawBase = import.meta.env.VITE_API_BASE_URL || 'https://clinicbell-backend.onrender.com';
-    const apiBase = rawBase.replace(/\/+$/, '');
+    const apiBase = getApiBaseUrl();
     setIsFetchingHospitals(true);
     fetch(`${apiBase}/api/hospitals`)
       .then((res) => res.json())
@@ -68,8 +68,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setIsLoading(true);
     setErrorMsg(null);
 
-    const rawBase = import.meta.env.VITE_API_BASE_URL || 'https://clinicbell-backend.onrender.com';
-    const apiBase = rawBase.replace(/\/+$/, '');
+    const apiBase = getApiBaseUrl();
     try {
       const res = await fetch(`${apiBase}/api/auth/login-cnic`, {
         method: 'POST',

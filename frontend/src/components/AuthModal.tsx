@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types';
+import { getApiBaseUrl } from '../config';
 import { ShieldCheck, Key, Building2, User, Stethoscope, Users, X, ArrowRight } from 'lucide-react';
 
 interface AuthModalProps {
@@ -9,17 +10,14 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
-  const [hospitals, setHospitals] = useState<Array<{ id: string; name: string; code: string }>>([
-    { id: 'hosp-gdg-01', name: 'GDGDemo Hospital — Al-Noor Clinic', code: 'GDGDemo' }
-  ]);
-  const [hospitalName, setHospitalName] = useState('GDGDemo Hospital — Al-Noor Clinic');
+  const [hospitals, setHospitals] = useState<Array<{ id: string; name: string; code: string }>>([]);
+  const [hospitalName, setHospitalName] = useState('');
   const [cnic, setCnic] = useState('42101-1234567-1');
   const [password, setPassword] = useState('password123');
   const [selectedRole, setSelectedRole] = useState<UserRole>('doctor');
 
   useEffect(() => {
-    const rawBase = import.meta.env.VITE_API_BASE_URL || 'https://clinicbell-backend.onrender.com';
-    const apiBase = rawBase.replace(/\/+$/, '');
+    const apiBase = getApiBaseUrl();
     fetch(`${apiBase}/api/hospitals`)
       .then((res) => res.json())
       .then((data) => {
