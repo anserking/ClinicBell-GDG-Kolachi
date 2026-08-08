@@ -112,11 +112,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
               <select
                 value={hospitalName}
                 onChange={(e) => setHospitalName(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 bg-[#F4F7F6] border border-[#DCE6E2] rounded-xl text-[#142420] focus:outline-none focus:border-[#0F5C56]"
+                className="w-full pl-9 pr-3 py-2.5 bg-white border-2 border-[#DCE6E2] rounded-xl text-[#142420] focus:outline-none focus:border-[#0F5C56] font-semibold text-xs sm:text-sm shadow-xs"
+                style={{ color: '#142420' }}
               >
                 <option value="GDGDemo Hospital — Al-Noor Clinic">GDGDemo Hospital — Al-Noor Clinic</option>
-                <option value="Shifa Medical Complex">Shifa Medical Complex</option>
-                <option value="Aga Khan University Hospital Node">Aga Khan University Hospital Node</option>
               </select>
             </div>
           </div>

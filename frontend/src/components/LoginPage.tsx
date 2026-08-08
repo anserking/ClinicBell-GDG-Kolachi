@@ -128,8 +128,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 style={{ color: '#142420' }}
               >
                 <option value="GDGDemo Hospital — Al-Noor Clinic">GDGDemo Hospital — Al-Noor Clinic</option>
-                <option value="Shifa Medical Complex">Shifa Medical Complex</option>
-                <option value="Aga Khan University Hospital Node">Aga Khan University Hospital Node</option>
               </select>
             </div>
           </div>
