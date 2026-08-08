@@ -3,15 +3,19 @@ import { GoogleGenAI, Type } from '@google/genai';
 
 const router = Router();
 
-// Initialize Gemini API
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || '',
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build'
+// Initialize Gemini API dynamically per request or global instance
+const getAiInstance = () => {
+  const apiKey = process.env.GEMINI_API_KEY || '';
+  if (!apiKey) return null;
+  return new GoogleGenAI({
+    apiKey,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build'
+      }
     }
-  }
-});
+  });
+};
 
 // AI Route: Parse doctor note/dictation into structured clinical record & WhatsApp message
 router.post('/parse-note', async (req, res) => {
@@ -22,7 +26,9 @@ router.post('/parse-note', async (req, res) => {
       return res.status(400).json({ error: 'noteText is required' });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    const ai = getAiInstance();
+
+    if (!ai) {
       // Fallback structuring if API key is not set
       return res.json({
         diagnosis: 'General Examination',

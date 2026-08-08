@@ -151,7 +151,8 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
 
     setIsAiProcessing(true);
     try {
-      const response = await fetch('/api/gemini/parse-note', {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+      const response = await fetch(`${apiBase}/api/gemini/parse-note`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
