@@ -154,6 +154,23 @@ ClinicBell runs on 5 core PostgreSQL tables:
 - **`visits`**: `(id, patient_id, doctor_id, diagnosis, prescription, raw_note, visit_date)`
 - **`followups`**: `(id, patient_id, visit_id, hospital_id, send_date, status, delay, custom_message)`
 
+## 🔑 Demo User Login Credentials (Neon Cloud PostgreSQL)
+
+Test live authentication across Admin, Doctor, and Customer/Patient portals using the credentials below:
+
+| Role | Name | CNIC (Login ID) | Password | Phone Number | Hospital Node |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Admin** | Hospital Administrator | `42101-0000000-0` | `password123` | `+92 300 0000000` | `hosp-gdg-01` |
+| **Doctor** | Dr. Ahmed Raza | `42101-1234567-1` | `password123` | `+92 300 1234567` | `hosp-gdg-01` |
+| **Doctor** | Dr. Sara Khan | `42101-2345678-2` | `password123` | `+92 300 9876543` | `hosp-gdg-01` |
+| **Doctor** | Dr. Bilal Mansoor | `42101-3456789-3` | `password123` | `+92 301 5554321` | `hosp-gdg-01` |
+| **Doctor** | Sikandar Ali | `11111-1111111-1` | `12345` | `03038518760` | Direct Node |
+| **Customer / Patient** | Fatima Tariq | `42101-9876543-2` | `password123` | `+92 321 9876543` | `hosp-gdg-01` |
+| **Customer / Patient** | Tariq Mehmood | `42101-8765432-1` | `password123` | `+92 333 8765432` | `hosp-gdg-01` |
+| **Customer / Patient** | Ayesha Malik | `42101-7654321-0` | `password123` | `+92 345 7654321` | `hosp-gdg-01` |
+| **Customer / Patient** | Zayn Ali | `42101-6543210-9` | `password123` | `+92 300 6543210` | `hosp-gdg-01` |
+| **Customer / Patient** | Usman Ghani | `42101-5432109-8` | `password123` | `+92 312 5432109` | `hosp-gdg-01` |
+
 ---
 
 ## 🚀 Live Deployments
