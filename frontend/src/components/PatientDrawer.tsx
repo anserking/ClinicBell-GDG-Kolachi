@@ -47,7 +47,7 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
   const [followupDelay, setFollowupDelay] = useState(patient?.followupDelay || '2 weeks');
   const [whatsappMsg, setWhatsappMsg] = useState(
     patient?.followupMessage ||
-      `Assalam-o-Alaikum ${patient?.name || 'Patient'}, this is Al-Noor Clinic following up on your visit today with Dr. Ahmed Raza. How are you feeling now? Please let us know if you need any assistance.`
+    `Assalam-o-Alaikum ${patient?.name || 'Patient'}, this is Al-Noor Clinic following up on your visit today with Dr. Ahmed Raza. How are you feeling now? Please let us know if you need any assistance.`
   );
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -64,7 +64,7 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
     setFollowupDelay(patient.followupDelay || '2 weeks');
     setWhatsappMsg(
       patient.followupMessage ||
-        `Assalam-o-Alaikum ${patient.name}, this is Al-Noor Clinic following up on your visit today with Dr. Ahmed Raza. How are you feeling now? Please let us know if you need any assistance.`
+      `Assalam-o-Alaikum ${patient.name}, this is Al-Noor Clinic following up on your visit today with Dr. Ahmed Raza. How are you feeling now? Please let us know if you need any assistance.`
     );
     setTypedText('');
     setAudioTranscript('');
@@ -74,9 +74,17 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
     setSpeechError(null);
   }, [patient?.id]);
 
-  // Handle Speech Recognition cleanly
+  // Handle Speech Recognition cleanly across desktop & mobile
   const startRecording = () => {
     setSpeechError(null);
+    setIsRecording(true);
+    setRecordingTime(0);
+
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setRecordingTime((prev) => prev + 1);
+    }, 1000);
+
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -86,16 +94,7 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         recognition.continuous = !isIOS;
         recognition.interimResults = true;
-        recognition.lang = 'en-US';
-
-        recognition.onstart = () => {
-          setIsRecording(true);
-          setRecordingTime(0);
-          if (timerRef.current) clearInterval(timerRef.current);
-          timerRef.current = setInterval(() => {
-            setRecordingTime((prev) => prev + 1);
-          }, 1000);
-        };
+        recognition.lang = navigator.language || 'en-US';
 
         recognition.onresult = (event: any) => {
           let fullTranscript = '';
@@ -110,18 +109,9 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
         recognition.onerror = (event: any) => {
           console.warn('[SpeechRecognition] error event:', event.error);
           if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            setSpeechError('Microphone permission blocked. Please allow mic access in your browser settings.');
+            setSpeechError('Microphone access blocked. Use mobile keyboard mic 🎙️ or enable mic in browser settings.');
           } else if (event.error !== 'no-speech') {
             setSpeechError(`Voice dictation note: ${event.error}`);
-          }
-          stopRecording();
-        };
-
-        recognition.onend = () => {
-          setIsRecording(false);
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
           }
         };
 
@@ -129,22 +119,8 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
         recognitionRef.current = recognition;
         return;
       } catch (err) {
-        console.warn('[SpeechRecognition] Failed to initialize:', err);
+        console.warn('[SpeechRecognition] Exception on start:', err);
       }
-    }
-
-    // Fallback if SpeechRecognition is unavailable in browser environment
-    setIsRecording(true);
-    setRecordingTime(0);
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setRecordingTime((prev) => prev + 1);
-    }, 1000);
-
-    if (!audioTranscript) {
-      setAudioTranscript(
-        'Patient presents with mild throat infection and fever 101°F. Prescribe Augmentin 625mg twice daily for 5 days and Panadol Extra.'
-      );
     }
   };
 
@@ -157,7 +133,7 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch (e) {}
+      } catch (e) { }
       recognitionRef.current = null;
     }
   };
@@ -304,21 +280,19 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
               <div className="flex bg-[#F4F7F6] p-1 rounded-xl border border-[#DCE6E2] text-xs">
                 <button
                   onClick={() => setInputMode('voice')}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                    inputMode === 'voice'
-                      ? 'bg-white text-[#0A413D] shadow-xs'
-                      : 'text-[#4E6259] hover:text-[#142420]'
-                  }`}
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${inputMode === 'voice'
+                    ? 'bg-white text-[#0A413D] shadow-xs'
+                    : 'text-[#4E6259] hover:text-[#142420]'
+                    }`}
                 >
                   Voice Dictation
                 </button>
                 <button
                   onClick={() => setInputMode('text')}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                    inputMode === 'text'
-                      ? 'bg-white text-[#0A413D] shadow-xs'
-                      : 'text-[#4E6259] hover:text-[#142420]'
-                  }`}
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${inputMode === 'text'
+                    ? 'bg-white text-[#0A413D] shadow-xs'
+                    : 'text-[#4E6259] hover:text-[#142420]'
+                    }`}
                 >
                   Type Note
                 </button>
@@ -331,9 +305,8 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
                 <div className="flex items-center gap-3">
                   <button
                     onClick={isRecording ? stopRecording : startRecording}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all shadow-md active:scale-95 ${
-                      isRecording ? 'bg-red-600 animate-pulse' : 'bg-[#0F5C56] hover:bg-[#0A413D]'
-                    }`}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all shadow-md active:scale-95 ${isRecording ? 'bg-red-600 animate-pulse' : 'bg-[#0F5C56] hover:bg-[#0A413D]'
+                      }`}
                   >
                     {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                   </button>
@@ -381,6 +354,20 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
                   placeholder="Dictated notes will appear here in real-time..."
                   className="w-full h-24 p-3 bg-white border border-[#DCE6E2] rounded-lg text-xs sm:text-sm text-[#142420] focus:outline-none focus:border-[#0F5C56]"
                 />
+
+                <div className="flex items-center justify-between text-[11px] text-[#7C8F87]">
+                  <span>Or tap keyboard mic 🎙️ to dictate</span>
+                  <button
+                    onClick={() =>
+                      setAudioTranscript(
+                        'Patient presents with mild throat infection and fever 101°F. Prescribe Augmentin 625mg twice daily for 5 days and Panadol Extra.'
+                      )
+                    }
+                    className="text-[#0F5C56] font-semibold hover:underline cursor-pointer"
+                  >
+                    + Fill Sample Dictation
+                  </button>
+                </div>
               </div>
             ) : (
               <textarea
@@ -456,14 +443,12 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
               {/* Toggle Switch */}
               <button
                 onClick={() => setFollowupEnabled(!followupEnabled)}
-                className={`w-11 h-6 rounded-full transition-colors relative ${
-                  followupEnabled ? 'bg-[#25D366]' : 'bg-[#DCE6E2]'
-                }`}
+                className={`w-11 h-6 rounded-full transition-colors relative ${followupEnabled ? 'bg-[#25D366]' : 'bg-[#DCE6E2]'
+                  }`}
               >
                 <span
-                  className={`w-5 h-5 rounded-full bg-white absolute top-0.5 left-0.5 transition-transform shadow-xs ${
-                    followupEnabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+                  className={`w-5 h-5 rounded-full bg-white absolute top-0.5 left-0.5 transition-transform shadow-xs ${followupEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </div>
