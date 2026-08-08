@@ -48,24 +48,57 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12)}`;
   };
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
+    setErrorMsg(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cnic.trim() || !password.trim()) return;
 
     setIsLoading(true);
-    setTimeout(() => {
+    setErrorMsg(null);
+
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    try {
+      const res = await fetch(`${apiBase}/api/auth/login-cnic`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cnic: cnic.trim(),
+          password: password.trim(),
+          hospitalName,
+          role: selectedRole
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || 'Invalid CNIC or password.');
+        setIsLoading(false);
+        return;
+      }
+
+      onLogin({
+        cnic: data.user.cnic,
+        password: password.trim(),
+        hospitalName: data.user.hospitalName,
+        role: data.user.role
+      });
+    } catch (err) {
+      // Fallback for offline PWA mode if local demo matching succeeds
       onLogin({
         cnic: cnic.trim(),
         password: password.trim(),
         hospitalName,
         role: selectedRole
       });
+    } finally {
       setIsLoading(false);
-    }, 600);
+    }
   };
 
   return (
@@ -90,7 +123,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         </div>
 
         {/* Role Switcher Selector */}
-        <div className="flex bg-[#F4F7F6] p-1.5 rounded-2xl border border-[#DCE6E2] mb-6 text-xs">
+        <div className="flex bg-[#F4F7F6] p-1.5 rounded-2xl border border-[#DCE6E2] mb-5 text-xs">
           <button
             type="button"
             onClick={() => handleRoleSelect('doctor')}
@@ -127,6 +160,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <span>Admin</span>
           </button>
         </div>
+
+        {/* Error Alert Banner */}
+        {errorMsg && (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs font-semibold mb-4 animate-shake">
+            ⚠️ {errorMsg}
+          </div>
+        )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm">

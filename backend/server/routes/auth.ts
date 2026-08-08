@@ -16,24 +16,20 @@ router.post('/login-cnic', async (req, res) => {
     // Lookup user by CNIC in Neon DB
     const result = await pool.query('SELECT * FROM users WHERE cnic = $1', [cnic]);
 
-    let user;
-    if (result.rows.length > 0) {
-      user = result.rows[0];
-    } else {
-      // Demo fallback user object if database is initializing
-      let name = 'Dr. Ahmed Raza';
-      if (role === 'admin') name = 'Hospital Administrator';
-      if (role === 'patient') name = 'Fatima Tariq';
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid CNIC or Password. Account not found in database.' });
+    }
 
-      user = {
-        id: `u-${Date.now().toString().slice(-4)}`,
-        cnic,
-        name,
-        phone: '+92 300 1234567',
-        role: role || 'doctor',
-        hospital_id: 'hosp-gdg-01',
-        specialty: 'General Medicine'
-      };
+    const user = result.rows[0];
+
+    // Check password
+    if (user.password_hash && user.password_hash !== password) {
+      return res.status(401).json({ error: 'Invalid CNIC or Password. Credentials do not match.' });
+    }
+
+    // Check role match if specified
+    if (role && user.role && user.role.toLowerCase() !== role.toLowerCase()) {
+      return res.status(403).json({ error: `Account exists as ${user.role.toUpperCase()}, but you selected ${role.toUpperCase()}. Please switch tabs.` });
     }
 
     const responseDto: LoginResponseDto = {
