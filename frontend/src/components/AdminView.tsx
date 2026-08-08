@@ -50,10 +50,10 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
   // Format CNIC as XXXXX-XXXXXXX-X automatically
   const formatCnicInput = (val: string) => {
-    const cleaned = val.replace(/\D/g, '').slice(0, 13);
-    if (cleaned.length <= 5) return cleaned;
-    if (cleaned.length <= 12) return `${cleaned.slice(0, 5)}-${cleaned.slice(5)}`;
-    return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}-${cleaned.slice(12)}`;
+    const digits = val.replace(/\D/g, '').slice(0, 13);
+    if (digits.length <= 5) return digits;
+    if (digits.length <= 12) return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+    return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12)}`;
   };
 
   const handleRegisterDoctor = (e: React.FormEvent) => {
@@ -220,7 +220,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                     value={docCnic}
                     onChange={(e) => setDocCnic(formatCnicInput(e.target.value))}
                     placeholder="42101-1234567-1"
-                    maxLength={15}
+                    maxLength={18}
                     required
                     className="w-full p-2.5 bg-[#F4F7F6] border border-[#DCE6E2] rounded-xl font-mono-tabular text-[#142420] focus:outline-none focus:border-[#0F5C56]"
                   />
@@ -309,7 +309,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                     value={custCnic}
                     onChange={(e) => setCustCnic(formatCnicInput(e.target.value))}
                     placeholder="42101-9876543-2"
-                    maxLength={15}
+                    maxLength={18}
                     required
                     className="w-full p-2.5 bg-[#F4F7F6] border border-[#DCE6E2] rounded-xl font-mono-tabular text-[#142420] focus:outline-none focus:border-[#0F5C56]"
                   />

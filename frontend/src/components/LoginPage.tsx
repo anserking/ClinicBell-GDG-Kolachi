@@ -26,10 +26,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const formatCnicInput = (val: string) => {
-    const cleaned = val.replace(/\D/g, '').slice(0, 13);
-    if (cleaned.length <= 5) return cleaned;
-    if (cleaned.length <= 12) return `${cleaned.slice(0, 5)}-${cleaned.slice(5)}`;
-    return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}-${cleaned.slice(12)}`;
+    const digits = val.replace(/\D/g, '').slice(0, 13);
+    if (digits.length <= 5) return digits;
+    if (digits.length <= 12) return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+    return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12)}`;
   };
 
   const handleRoleSelect = (role: UserRole) => {
@@ -142,7 +142,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 value={cnic}
                 onChange={(e) => setCnic(formatCnicInput(e.target.value))}
                 placeholder="42101-1234567-1"
-                maxLength={15}
+                maxLength={18}
                 required
                 className="w-full pl-10 pr-4 py-3 bg-[#F4F7F6] border border-[#DCE6E2] rounded-xl font-mono-tabular text-[#142420] focus:outline-none focus:border-[#0F5C56]"
               />
