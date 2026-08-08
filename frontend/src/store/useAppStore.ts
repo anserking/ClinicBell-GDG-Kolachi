@@ -1,103 +1,10 @@
 import { useSyncExternalStore } from 'react';
 import { ActiveView, Patient, FollowupRecord, UserRole, User, DoctorRecord, CustomerRecord } from '../types';
-import { initialPatients, initialFollowups } from '../data/initialData';
+import { getApiBaseUrl } from '../config';
 
-const STORAGE_KEY_PATIENTS = 'clinicbell_patients_v1';
-const STORAGE_KEY_FOLLOWUPS = 'clinicbell_followups_v1';
-const STORAGE_KEY_DOCTORS = 'clinicbell_doctors_v1';
-const STORAGE_KEY_CUSTOMERS = 'clinicbell_customers_v1';
 const STORAGE_KEY_TOKEN = 'clinicbell_jwt_token_v1';
 const STORAGE_KEY_USER = 'clinicbell_user_session_v1';
 const STORAGE_KEY_EXPIRES = 'clinicbell_session_expires_v1';
-
-const initialDoctors: DoctorRecord[] = [
-  {
-    id: 'doc-001',
-    cnic: '42101-1234567-1',
-    name: 'Dr. Ahmed Raza',
-    phone: '+92 300 1234567',
-    specialty: 'General Medicine',
-    registeredAt: 'Today'
-  },
-  {
-    id: 'doc-002',
-    cnic: '42101-2345678-2',
-    name: 'Dr. Sara Khan',
-    phone: '+92 300 9876543',
-    specialty: 'Pediatrics',
-    registeredAt: 'Yesterday'
-  }
-];
-
-const initialCustomers: CustomerRecord[] = [
-  {
-    id: 'cust-001',
-    cnic: '42101-9876543-2',
-    name: 'Fatima Tariq',
-    phone: '+92 321 9876543',
-    age: 28,
-    gender: 'Female',
-    registeredAt: 'Today'
-  },
-  {
-    id: 'cust-002',
-    cnic: '42101-8765432-1',
-    name: 'Tariq Mehmood',
-    phone: '+92 333 8765432',
-    age: 54,
-    gender: 'Male',
-    registeredAt: '3 days ago'
-  }
-];
-
-// Helpers to load persisted data from localStorage
-function getInitialPatients(): Patient[] {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_PATIENTS);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (err) {
-    console.warn('Failed to load patients from localStorage:', err);
-  }
-  return initialPatients;
-}
-
-function getInitialFollowups(): FollowupRecord[] {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_FOLLOWUPS);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (err) {
-    console.warn('Failed to load followups from localStorage:', err);
-  }
-  return initialFollowups;
-}
-
-function getInitialDoctors(): DoctorRecord[] {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_DOCTORS);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (err) {}
-  return initialDoctors;
-}
-
-function getInitialCustomers(): CustomerRecord[] {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_CUSTOMERS);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (err) {}
-  return initialCustomers;
-}
 
 function getInitialSession(): { user: User | null; role: UserRole; isAuthenticated: boolean } {
   try {
@@ -112,7 +19,9 @@ function getInitialSession(): { user: User | null; role: UserRole; isAuthenticat
         return { user, role: user.role, isAuthenticated: true };
       }
     }
-  } catch (err) {}
+  } catch (err) {
+    console.warn('Failed to restore session from localStorage:', err);
+  }
   return { user: null, role: 'doctor', isAuthenticated: false };
 }
 
@@ -131,6 +40,7 @@ export interface AppState {
   userRole: UserRole;
   currentUser: User | null;
   jwtToken: string | null;
+  isLoadingData: boolean;
 
   // Actions
   setActiveView: (view: ActiveView) => void;
@@ -139,11 +49,12 @@ export interface AppState {
   setIsNewPatientModalOpen: (isOpen: boolean) => void;
   setIsMobileSidebarOpen: (isOpen: boolean) => void;
   setIsAuthModalOpen: (isOpen: boolean) => void;
-  loginUser: (cnic: string, role: UserRole, hospitalName: string, token?: string) => void;
+  fetchInitialData: () => Promise<void>;
+  loginUser: (userObj: any, token?: string) => void;
   logoutUser: () => void;
-  addDoctor: (doctor: Omit<DoctorRecord, 'id' | 'registeredAt'>, password: string) => void;
-  addCustomer: (customer: Omit<CustomerRecord, 'id' | 'registeredAt'>, password: string) => void;
-  addPatient: (newPatient: Patient) => void;
+  addDoctor: (doctor: Omit<DoctorRecord, 'id' | 'registeredAt'>, password: string) => Promise<void>;
+  addCustomer: (customer: Omit<CustomerRecord, 'id' | 'registeredAt'>, password: string) => Promise<void>;
+  addPatient: (newPatient: Patient) => Promise<void>;
   updatePatient: (updatedPatient: Patient) => void;
   markFollowupSent: (followupId: string) => void;
   sendWhatsApp: (patient: Patient, customMsg?: string) => void;
@@ -162,10 +73,10 @@ class Store {
     this.state = {
       activeView: initialView,
       searchQuery: '',
-      patients: getInitialPatients(),
-      followups: getInitialFollowups(),
-      doctors: getInitialDoctors(),
-      customers: getInitialCustomers(),
+      patients: [],
+      followups: [],
+      doctors: [],
+      customers: [],
       selectedPatient: null,
       isNewPatientModalOpen: false,
       isMobileSidebarOpen: false,
@@ -174,6 +85,7 @@ class Store {
       userRole: session.role,
       currentUser: session.user,
       jwtToken: localStorage.getItem(STORAGE_KEY_TOKEN),
+      isLoadingData: true,
 
       setActiveView: (view) => this.setState({ activeView: view, isMobileSidebarOpen: false }),
       setSearchQuery: (query) => this.setState({ searchQuery: query }),
@@ -182,32 +94,54 @@ class Store {
       setIsMobileSidebarOpen: (isOpen) => this.setState({ isMobileSidebarOpen: isOpen }),
       setIsAuthModalOpen: (isOpen) => this.setState({ isAuthModalOpen: isOpen }),
 
-      loginUser: (cnic, role, hospitalName, token) => {
-        let name = 'Authorized User';
-        if (role === 'admin') name = 'Hospital Administrator';
-        if (role === 'doctor') name = 'Dr. Ahmed Raza';
-        if (role === 'patient') name = 'Fatima Tariq';
+      fetchInitialData: async () => {
+        const apiBase = getApiBaseUrl();
+        this.setState({ isLoadingData: true });
+        try {
+          const [docsRes, custsRes, ptsRes, folRes] = await Promise.allSettled([
+            fetch(`${apiBase}/api/admin/doctors`).then(r => r.json()),
+            fetch(`${apiBase}/api/admin/customers`).then(r => r.json()),
+            fetch(`${apiBase}/api/patients`).then(r => r.json()),
+            fetch(`${apiBase}/api/patients/followups`).then(r => r.json())
+          ]);
 
-        const user: User = {
-          id: `u-${Date.now().toString().slice(-4)}`,
-          cnic,
-          name,
-          phone: '+92 300 1234567',
-          role,
-          hospitalName
-        };
+          const doctors = docsRes.status === 'fulfilled' && Array.isArray(docsRes.value) ? docsRes.value : [];
+          const customers = custsRes.status === 'fulfilled' && Array.isArray(custsRes.value) ? custsRes.value : [];
+          const patients = ptsRes.status === 'fulfilled' && Array.isArray(ptsRes.value) ? ptsRes.value : [];
+          const followups = folRes.status === 'fulfilled' && Array.isArray(folRes.value) ? folRes.value : [];
 
+          this.setState({
+            doctors,
+            customers,
+            patients,
+            followups,
+            isLoadingData: false
+          });
+        } catch (err) {
+          console.warn('[Store] Error fetching initial data from backend DB:', err);
+          this.setState({ isLoadingData: false });
+        }
+      },
+
+      loginUser: (userObj: any, token?: string) => {
+        const role: UserRole = userObj.role || 'doctor';
         let targetView: ActiveView = 'today';
         if (role === 'admin') targetView = 'admin';
         if (role === 'patient') targetView = 'patient-portal';
 
-        let matchedPatient = this.state.selectedPatient;
-        if (role === 'patient') {
-          matchedPatient = this.state.patients[0] || null;
-        }
+        const user: User = {
+          id: userObj.id || `u-${Date.now().toString().slice(-4)}`,
+          cnic: userObj.cnic,
+          name: userObj.name || (role === 'doctor' ? 'Dr. Ahmed Raza' : 'Fatima Tariq'),
+          phone: userObj.phone || '+92 300 1234567',
+          role: role,
+          hospitalName: userObj.hospitalName || 'GDGDemo Hospital',
+          specialty: userObj.specialty,
+          age: userObj.age,
+          gender: userObj.gender
+        };
 
-        // Save 24-hour token & user session in localStorage
-        const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+        const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
         try {
           if (token) localStorage.setItem(STORAGE_KEY_TOKEN, token);
           localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
@@ -219,9 +153,11 @@ class Store {
           userRole: role,
           isAuthenticated: true,
           jwtToken: token || null,
-          activeView: targetView,
-          selectedPatient: matchedPatient
+          activeView: targetView
         });
+
+        // Refresh all DB data upon login
+        this.state.fetchInitialData();
       },
 
       logoutUser: () => {
@@ -239,97 +175,66 @@ class Store {
         });
       },
 
-      addDoctor: (docData, _password) => {
-        const newDoctor: DoctorRecord = {
-          id: `doc-${Date.now().toString().slice(-4)}`,
-          ...docData,
-          registeredAt: 'Just now'
-        };
-        const updatedDoctors = [newDoctor, ...this.state.doctors];
-        this.setState({ doctors: updatedDoctors });
+      addDoctor: async (docData, password) => {
+        const apiBase = getApiBaseUrl();
         try {
-          localStorage.setItem(STORAGE_KEY_DOCTORS, JSON.stringify(updatedDoctors));
-        } catch (e) {}
-      },
-
-      addCustomer: (custData, _password) => {
-        const newCustomer: CustomerRecord = {
-          id: `cust-${Date.now().toString().slice(-4)}`,
-          ...custData,
-          registeredAt: 'Just now'
-        };
-        const updatedCustomers = [newCustomer, ...this.state.customers];
-        this.setState({ customers: updatedCustomers });
-        try {
-          localStorage.setItem(STORAGE_KEY_CUSTOMERS, JSON.stringify(updatedCustomers));
-        } catch (e) {}
-      },
-
-      addPatient: (newPatient) => {
-        const updatedPatients = [newPatient, ...this.state.patients];
-        let updatedFollowups = [...this.state.followups];
-
-        if (newPatient.followupEnabled) {
-          const newFollowup: FollowupRecord = {
-            id: `F-${Date.now().toString().slice(-4)}`,
-            patientId: newPatient.id,
-            patientName: newPatient.name,
-            phone: newPatient.phone,
-            diagnosisSummary: newPatient.note,
-            sendDate: 'In 2 weeks',
-            status: 'due',
-            delay: '2 weeks',
-            customMessage: newPatient.followupMessage
-          };
-          updatedFollowups = [newFollowup, ...updatedFollowups];
+          const res = await fetch(`${apiBase}/api/admin/doctors`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...docData, password })
+          });
+          if (res.ok) {
+            const newDoctor = await res.json();
+            this.setState({ doctors: [newDoctor, ...this.state.doctors] });
+          }
+        } catch (err) {
+          console.error('Failed to register doctor in DB:', err);
         }
+      },
 
-        this.setState({ patients: updatedPatients, followups: updatedFollowups });
-        this.persist(updatedPatients, updatedFollowups);
+      addCustomer: async (custData, password) => {
+        const apiBase = getApiBaseUrl();
+        try {
+          const res = await fetch(`${apiBase}/api/admin/customers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...custData, password })
+          });
+          if (res.ok) {
+            const newCustomer = await res.json();
+            this.setState({ customers: [newCustomer, ...this.state.customers] });
+            this.state.fetchInitialData();
+          }
+        } catch (err) {
+          console.error('Failed to register customer in DB:', err);
+        }
+      },
+
+      addPatient: async (newPatient) => {
+        const apiBase = getApiBaseUrl();
+        try {
+          const res = await fetch(`${apiBase}/api/patients`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newPatient)
+          });
+          if (res.ok) {
+            const created = await res.json();
+            this.setState({ patients: [created, ...this.state.patients] });
+          }
+        } catch (err) {
+          console.error('Failed to create patient in DB:', err);
+        }
       },
 
       updatePatient: (updatedPatient) => {
         const updatedPatients = this.state.patients.map((p) =>
           p.id === updatedPatient.id ? updatedPatient : p
         );
-
-        let updatedFollowups = [...this.state.followups];
-        const exists = updatedFollowups.some((f) => f.patientId === updatedPatient.id);
-
-        if (exists) {
-          updatedFollowups = updatedFollowups.map((f) =>
-            f.patientId === updatedPatient.id
-              ? {
-                  ...f,
-                  diagnosisSummary: updatedPatient.note,
-                  customMessage: updatedPatient.followupMessage,
-                  delay: updatedPatient.followupDelay || '2 weeks'
-                }
-              : f
-          );
-        } else if (updatedPatient.followupEnabled) {
-          updatedFollowups = [
-            {
-              id: `F-${Date.now().toString().slice(-4)}`,
-              patientId: updatedPatient.id,
-              patientName: updatedPatient.name,
-              phone: updatedPatient.phone,
-              diagnosisSummary: updatedPatient.note,
-              sendDate: `In ${updatedPatient.followupDelay || '2 weeks'}`,
-              status: 'due',
-              delay: updatedPatient.followupDelay || '2 weeks',
-              customMessage: updatedPatient.followupMessage
-            },
-            ...updatedFollowups
-          ];
-        }
-
         this.setState({
           patients: updatedPatients,
-          followups: updatedFollowups,
           selectedPatient: updatedPatient
         });
-        this.persist(updatedPatients, updatedFollowups);
       },
 
       markFollowupSent: (followupId) => {
@@ -337,7 +242,6 @@ class Store {
           f.id === followupId ? { ...f, status: 'sent' as const } : f
         );
         this.setState({ followups: updatedFollowups });
-        this.persist(this.state.patients, updatedFollowups);
       },
 
       sendWhatsApp: (patient, customMsg) => {
@@ -346,57 +250,42 @@ class Store {
         const text = encodeURIComponent(
           customMsg ||
             patient.followupMessage ||
-            `Assalam-o-Alaikum ${patient.name}, this is Al-Noor Clinic following up on your visit. How are you feeling today?`
+            `Assalam-o-Alaikum ${patient.name}, this is GDGDemo Hospital following up on your visit. How are you feeling today?`
         );
         window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
-
-        const updatedPatients = this.state.patients.map((p) =>
-          p.id === patient.id ? { ...p, status: 'sent' as const } : p
-        );
-        const updatedFollowups = this.state.followups.map((f) =>
-          f.patientId === patient.id ? { ...f, status: 'sent' as const } : f
-        );
-
-        this.setState({ patients: updatedPatients, followups: updatedFollowups });
-        this.persist(updatedPatients, updatedFollowups);
       }
+    };
+
+    // Auto-fetch database records on mount
+    this.state.fetchInitialData();
+  }
+
+  public getState(): AppState {
+    return this.state;
+  }
+
+  public setState(partialState: Partial<AppState>): void {
+    this.state = { ...this.state, ...partialState };
+    this.notify();
+  }
+
+  public subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
     };
   }
 
-  private persist(patients: Patient[], followups: FollowupRecord[]) {
-    try {
-      localStorage.setItem(STORAGE_KEY_PATIENTS, JSON.stringify(patients));
-      localStorage.setItem(STORAGE_KEY_FOLLOWUPS, JSON.stringify(followups));
-    } catch (err) {
-      console.warn('Failed to save to localStorage:', err);
-    }
-  }
-
-  getState = () => this.state;
-
-  setState = (partial: Partial<AppState>) => {
-    this.state = { ...this.state, ...partial };
+  private notify(): void {
     this.listeners.forEach((listener) => listener());
-  };
-
-  subscribe = (listener: () => void) => {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  };
+  }
 }
 
-const storeInstance = new Store();
+export const store = new Store();
 
-export function useAppStore(): AppState;
-export function useAppStore<T>(selector: (state: AppState) => T): T;
-export function useAppStore<T>(selector?: (state: AppState) => T): T | AppState {
-  const state = useSyncExternalStore(
-    storeInstance.subscribe,
-    storeInstance.getState,
-    storeInstance.getState
+export function useAppStore(): AppState {
+  return useSyncExternalStore(
+    (listener) => store.subscribe(listener),
+    () => store.getState()
   );
-
-  return selector ? selector(state) : state;
 }
-
-useAppStore.getState = storeInstance.getState;

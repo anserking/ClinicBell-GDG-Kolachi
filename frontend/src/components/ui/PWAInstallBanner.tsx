@@ -3,11 +3,11 @@ import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { Smartphone, Download, X } from 'lucide-react';
 
 export const PWAInstallBanner: React.FC = () => {
-  const { canInstall, isIOS, triggerInstall } = usePWAInstall();
+  const { isInstalled, isIOS, triggerInstall } = usePWAInstall();
   const [dismissed, setDismissed] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
 
-  if (!canInstall || dismissed) return null;
+  if (isInstalled || dismissed) return null;
 
   const handleInstallClick = async () => {
     const res = await triggerInstall();

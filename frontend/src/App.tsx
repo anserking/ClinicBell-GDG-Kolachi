@@ -51,8 +51,8 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <LoginPage
-        onLogin={(dto, token) => {
-          loginUser(dto.cnic, dto.role, dto.hospitalName, token);
+        onLogin={(userObj, token) => {
+          loginUser(userObj, token);
         }}
       />
     );

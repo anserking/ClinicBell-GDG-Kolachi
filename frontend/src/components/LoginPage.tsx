@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types';
 import { LoginRequestDto } from '../dtos';
 import { getApiBaseUrl } from '../config';
+import { PWAInstallBanner } from './ui/PWAInstallBanner';
 import {
   ShieldCheck,
   Building2,
@@ -16,7 +17,7 @@ import {
 } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: (dto: LoginRequestDto, token?: string) => void;
+  onLogin: (userObj: any, token?: string) => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
@@ -88,15 +89,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         return;
       }
 
-      onLogin(
-        {
-          cnic: data.user.cnic,
-          password: password.trim(),
-          hospitalName: data.user.hospitalName,
-          role: data.user.role
-        },
-        data.token
-      );
+      onLogin(data.user, data.token);
     } catch (err: any) {
       setErrorMsg('Unable to connect to hospital authentication server. Please check your network connection.');
     } finally {
@@ -105,13 +98,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#072B28] via-[#0A413D] to-[#0F5C56] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* Background Decorative Ambient Circles */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#25D366]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#0F5C56]/30 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-br from-[#072B28] via-[#0A413D] to-[#0F5C56] text-white flex flex-col items-center justify-between relative overflow-hidden font-sans">
+      {/* Universal Desktop & Mobile PWA Install Banner */}
+      <div className="w-full relative z-30">
+        <PWAInstallBanner />
+      </div>
 
       {/* Main Glassmorphism Login Container */}
-      <div className="w-full max-w-md bg-white/95 backdrop-blur-xl text-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 border border-white/20 animate-scaleUp">
+      <div className="my-auto py-8 px-4 w-full flex items-center justify-center">
+        <div className="w-full max-w-md bg-white/95 backdrop-blur-xl text-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 border border-white/20 animate-scaleUp">
         {/* Brand Header */}
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-[#25D366] to-[#0F5C56] text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#0F5C56]/30">
@@ -253,9 +248,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </button>
         </form>
       </div>
+      </div>
 
       {/* Footer Copy */}
-      <div className="mt-6 text-center text-xs text-[#9FC0BA] font-mono-tabular relative z-10">
+      <div className="mb-4 text-center text-xs text-[#9FC0BA] font-mono-tabular relative z-10">
         ClinicBell Multi-Hospital Cloud Node · Private Network E2E Encrypted
       </div>
     </div>

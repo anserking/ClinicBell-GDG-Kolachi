@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [canInstall, setCanInstall] = useState(false);
+  const [canInstall, setCanInstall] = useState(true);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
@@ -13,15 +13,14 @@ export function usePWAInstall() {
     setIsIOS(iosDevice);
 
     // Check if app is already running in standalone mode (installed)
-    if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) {
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    if (isStandaloneMode) {
       setIsInstalled(true);
       setCanInstall(false);
       return;
     }
 
-    if (iosDevice) {
-      setCanInstall(true);
-    }
+    setCanInstall(true);
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -50,11 +49,16 @@ export function usePWAInstall() {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       setDeferredPrompt(null);
-      setCanInstall(false);
-      return outcome === 'accepted' ? 'accepted' : 'dismissed';
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+        setCanInstall(false);
+        return 'accepted';
+      }
+      return 'dismissed';
     }
     return 'manual_instructions';
   };
 
   return { canInstall, isInstalled, isIOS, triggerInstall };
 }
+
