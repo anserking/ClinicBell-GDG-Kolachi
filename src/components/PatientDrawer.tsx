@@ -30,8 +30,6 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
   onUpdatePatient,
   onSendWhatsApp
 }) => {
-  if (!patient) return null;
-
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
   const [typedText, setTypedText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -45,11 +43,11 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
   const [parsedPrescription, setParsedPrescription] = useState('');
 
   // Follow-up settings
-  const [followupEnabled, setFollowupEnabled] = useState(patient.followupEnabled ?? true);
-  const [followupDelay, setFollowupDelay] = useState(patient.followupDelay || '2 weeks');
+  const [followupEnabled, setFollowupEnabled] = useState(patient?.followupEnabled ?? true);
+  const [followupDelay, setFollowupDelay] = useState(patient?.followupDelay || '2 weeks');
   const [whatsappMsg, setWhatsappMsg] = useState(
-    patient.followupMessage ||
-      `Assalam-o-Alaikum ${patient.name}, this is Al-Noor Clinic following up on your visit today with Dr. Ahmed Raza. How are you feeling now? Please let us know if you need any assistance.`
+    patient?.followupMessage ||
+      `Assalam-o-Alaikum ${patient?.name || 'Patient'}, this is Al-Noor Clinic following up on your visit today with Dr. Ahmed Raza. How are you feeling now? Please let us know if you need any assistance.`
   );
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -59,6 +57,7 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
 
   // Synchronize when patient changes
   useEffect(() => {
+    if (!patient) return;
     setFollowupEnabled(patient.followupEnabled ?? true);
     setFollowupDelay(patient.followupDelay || '2 weeks');
     setWhatsappMsg(
@@ -70,7 +69,7 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
     setParsedDiagnosis('');
     setParsedPrescription('');
     setSavedSuccess(false);
-  }, [patient.id]);
+  }, [patient?.id]);
 
   // Handle Speech Recognition if supported in browser
   const startRecording = async () => {
@@ -216,6 +215,8 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
     const s = secs % 60;
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
+
+  if (!patient) return null;
 
   return (
     <div className="fixed inset-0 bg-[#0A1412]/40 backdrop-blur-xs flex justify-end z-50 animate-fadeIn">

@@ -20,13 +20,11 @@ export default function App() {
     followups,
     selectedPatient,
     isNewPatientModalOpen,
-    isMobileSidebarOpen,
 
     setActiveView,
     setSearchQuery,
     setSelectedPatient,
     setIsNewPatientModalOpen,
-    setIsMobileSidebarOpen,
     addPatient,
     updatePatient,
     markFollowupSent,
@@ -60,12 +58,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F4F7F6] text-[#142420] font-sans antialiased flex flex-col md:flex-row pb-16 md:pb-0">
-      {/* Top Banner Notifications */}
-      <div className="fixed top-0 left-0 right-0 z-40">
-        <OfflineBanner />
-        <PWAInstallBanner />
-      </div>
-
       {/* Sidebar Desktop */}
       <div className="hidden md:block w-64 shrink-0">
         <Sidebar
@@ -78,33 +70,16 @@ export default function App() {
         />
       </div>
 
-      {/* Mobile Drawer Sidebar */}
-      {isMobileSidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/40 z-50"
-          onClick={() => setIsMobileSidebarOpen(false)}
-        >
-          <div className="w-64 h-full" onClick={(e) => e.stopPropagation()}>
-            <Sidebar
-              activeView={activeView}
-              setActiveView={setActiveView}
-              queueCount={todayQueue.length}
-              patientsCount={patients.length}
-              followupsCount={followups.length}
-              onOpenNewPatientModal={() => setIsNewPatientModalOpen(true)}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Main Content Workspace */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden pt-2">
+      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+        <OfflineBanner />
+        <PWAInstallBanner />
+
         <Topbar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           queueCount={todayQueue.length}
           onOpenNewPatientModal={() => setIsNewPatientModalOpen(true)}
-          onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">

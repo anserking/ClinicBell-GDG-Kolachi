@@ -26,15 +26,6 @@ export const Topbar: React.FC<TopbarProps> = ({
   return (
     <header className="sticky top-0 z-20 bg-white border-b border-[#DCE6E2] px-4 md:px-8 py-3.5 flex items-center justify-between gap-4 shadow-xs">
       <div className="flex items-center gap-3 flex-1 max-w-lg">
-        {onToggleMobileSidebar && (
-          <button
-            onClick={onToggleMobileSidebar}
-            className="md:hidden p-2 rounded-lg text-[#4E6259] hover:bg-[#F4F7F6]"
-            aria-label="Toggle Navigation"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-        )}
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7C8F87]" />
           <input

@@ -3,6 +3,7 @@
   "short_name": "SehatLoop",
   "description": "AI-powered healthcare & clinic management system for doctors and clinics in Pakistan.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F4F7F6",
   "theme_color": "#0F5C56",
@@ -13,13 +14,25 @@
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

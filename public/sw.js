@@ -3,9 +3,8 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/src/main.tsx',
-  '/src/index.css',
-  '/src/App.tsx'
+  '/icons/icon-192.png',
+  '/icons/icon-512.png'
 ];
 
 // Install event - Cache static app shell
@@ -36,7 +35,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - Network-first for API, Cache-first with Network fallback for static assets
+// Fetch event - Cache-first with Network fallback for static assets
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
