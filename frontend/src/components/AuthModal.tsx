@@ -18,7 +18,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
   const [selectedRole, setSelectedRole] = useState<UserRole>('doctor');
 
   useEffect(() => {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    const rawBase = import.meta.env.VITE_API_BASE_URL || 'https://clinicbell-backend.onrender.com';
+    const apiBase = rawBase.replace(/\/+$/, '');
     fetch(`${apiBase}/api/hospitals`)
       .then((res) => res.json())
       .then((data) => {

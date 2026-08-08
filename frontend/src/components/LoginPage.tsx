@@ -29,7 +29,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const apiBase = import.meta.env.VITE_API_BASE_URL;
+    const rawBase = import.meta.env.VITE_API_BASE_URL || 'https://clinicbell-backend.onrender.com';
+    const apiBase = rawBase.replace(/\/+$/, '');
     fetch(`${apiBase}/api/hospitals`)
       .then((res) => res.json())
       .then((data) => {
@@ -38,7 +39,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           setHospitalName(data[0].name);
         }
       })
-      .catch(() => { });
+      .catch((err) => {
+        console.warn('Failed to fetch hospital list from backend:', err);
+      });
   }, []);
 
   const formatCnicInput = (val: string) => {
@@ -62,7 +65,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setIsLoading(true);
     setErrorMsg(null);
 
-    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    const rawBase = import.meta.env.VITE_API_BASE_URL || 'https://clinicbell-backend.onrender.com';
+    const apiBase = rawBase.replace(/\/+$/, '');
     try {
       const res = await fetch(`${apiBase}/api/auth/login-cnic`, {
         method: 'POST',
