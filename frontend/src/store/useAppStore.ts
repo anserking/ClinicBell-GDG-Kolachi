@@ -6,6 +6,9 @@ const STORAGE_KEY_PATIENTS = 'clinicbell_patients_v1';
 const STORAGE_KEY_FOLLOWUPS = 'clinicbell_followups_v1';
 const STORAGE_KEY_DOCTORS = 'clinicbell_doctors_v1';
 const STORAGE_KEY_CUSTOMERS = 'clinicbell_customers_v1';
+const STORAGE_KEY_TOKEN = 'clinicbell_jwt_token_v1';
+const STORAGE_KEY_USER = 'clinicbell_user_session_v1';
+const STORAGE_KEY_EXPIRES = 'clinicbell_session_expires_v1';
 
 const initialDoctors: DoctorRecord[] = [
   {
@@ -96,6 +99,23 @@ function getInitialCustomers(): CustomerRecord[] {
   return initialCustomers;
 }
 
+function getInitialSession(): { user: User | null; role: UserRole; isAuthenticated: boolean } {
+  try {
+    const token = localStorage.getItem(STORAGE_KEY_TOKEN);
+    const userJson = localStorage.getItem(STORAGE_KEY_USER);
+    const expiresStr = localStorage.getItem(STORAGE_KEY_EXPIRES);
+
+    if (token && userJson && expiresStr) {
+      const expiresAt = Number(expiresStr);
+      if (Date.now() < expiresAt) {
+        const user = JSON.parse(userJson) as User;
+        return { user, role: user.role, isAuthenticated: true };
+      }
+    }
+  } catch (err) {}
+  return { user: null, role: 'doctor', isAuthenticated: false };
+}
+
 export interface AppState {
   activeView: ActiveView;
   searchQuery: string;
@@ -110,6 +130,7 @@ export interface AppState {
   isAuthenticated: boolean;
   userRole: UserRole;
   currentUser: User | null;
+  jwtToken: string | null;
 
   // Actions
   setActiveView: (view: ActiveView) => void;
@@ -118,7 +139,7 @@ export interface AppState {
   setIsNewPatientModalOpen: (isOpen: boolean) => void;
   setIsMobileSidebarOpen: (isOpen: boolean) => void;
   setIsAuthModalOpen: (isOpen: boolean) => void;
-  loginUser: (cnic: string, role: UserRole, hospitalName: string) => void;
+  loginUser: (cnic: string, role: UserRole, hospitalName: string, token?: string) => void;
   logoutUser: () => void;
   addDoctor: (doctor: Omit<DoctorRecord, 'id' | 'registeredAt'>, password: string) => void;
   addCustomer: (customer: Omit<CustomerRecord, 'id' | 'registeredAt'>, password: string) => void;
@@ -133,8 +154,13 @@ class Store {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
+    const session = getInitialSession();
+    let initialView: ActiveView = 'today';
+    if (session.isAuthenticated && session.role === 'admin') initialView = 'admin';
+    if (session.isAuthenticated && session.role === 'patient') initialView = 'patient-portal';
+
     this.state = {
-      activeView: 'today',
+      activeView: initialView,
       searchQuery: '',
       patients: getInitialPatients(),
       followups: getInitialFollowups(),
@@ -144,9 +170,10 @@ class Store {
       isNewPatientModalOpen: false,
       isMobileSidebarOpen: false,
       isAuthModalOpen: false,
-      isAuthenticated: false,
-      userRole: 'doctor',
-      currentUser: null,
+      isAuthenticated: session.isAuthenticated,
+      userRole: session.role,
+      currentUser: session.user,
+      jwtToken: localStorage.getItem(STORAGE_KEY_TOKEN),
 
       setActiveView: (view) => this.setState({ activeView: view, isMobileSidebarOpen: false }),
       setSearchQuery: (query) => this.setState({ searchQuery: query }),
@@ -155,7 +182,7 @@ class Store {
       setIsMobileSidebarOpen: (isOpen) => this.setState({ isMobileSidebarOpen: isOpen }),
       setIsAuthModalOpen: (isOpen) => this.setState({ isAuthModalOpen: isOpen }),
 
-      loginUser: (cnic, role, hospitalName) => {
+      loginUser: (cnic, role, hospitalName, token) => {
         let name = 'Authorized User';
         if (role === 'admin') name = 'Hospital Administrator';
         if (role === 'doctor') name = 'Dr. Ahmed Raza';
@@ -179,19 +206,35 @@ class Store {
           matchedPatient = this.state.patients[0] || null;
         }
 
+        // Save 24-hour token & user session in localStorage
+        const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+        try {
+          if (token) localStorage.setItem(STORAGE_KEY_TOKEN, token);
+          localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
+          localStorage.setItem(STORAGE_KEY_EXPIRES, expiresAt.toString());
+        } catch (e) {}
+
         this.setState({
           currentUser: user,
           userRole: role,
           isAuthenticated: true,
+          jwtToken: token || null,
           activeView: targetView,
           selectedPatient: matchedPatient
         });
       },
 
       logoutUser: () => {
+        try {
+          localStorage.removeItem(STORAGE_KEY_TOKEN);
+          localStorage.removeItem(STORAGE_KEY_USER);
+          localStorage.removeItem(STORAGE_KEY_EXPIRES);
+        } catch (e) {}
+
         this.setState({
           currentUser: null,
           isAuthenticated: false,
+          jwtToken: null,
           activeView: 'today'
         });
       },

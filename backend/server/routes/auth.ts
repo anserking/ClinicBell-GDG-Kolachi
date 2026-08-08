@@ -1,8 +1,11 @@
 import { Router } from 'express';
+import jwt from 'jsonwebtoken';
 import { pool } from '../db.js';
 import { LoginRequestDto, LoginResponseDto } from '../dtos/index.js';
 
 const router = Router();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'clinicbell-secret-key-24h';
 
 // POST /api/auth/login-cnic
 router.post('/login-cnic', async (req, res) => {
@@ -32,8 +35,20 @@ router.post('/login-cnic', async (req, res) => {
       return res.status(403).json({ error: `Account exists as ${user.role.toUpperCase()}, but you selected ${role.toUpperCase()}. Please switch tabs.` });
     }
 
+    // Sign 24-Hour JWT Token
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        cnic: user.cnic,
+        role: user.role,
+        hospitalId: user.hospital_id || 'hosp-gdg-01'
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
     const responseDto: LoginResponseDto = {
-      token: `jwt-token-${Date.now()}`,
+      token,
       user: {
         id: user.id,
         cnic: user.cnic,

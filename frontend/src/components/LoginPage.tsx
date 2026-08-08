@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: (dto: LoginRequestDto) => void;
+  onLogin: (dto: LoginRequestDto, token?: string) => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
@@ -82,12 +82,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         return;
       }
 
-      onLogin({
-        cnic: data.user.cnic,
-        password: password.trim(),
-        hospitalName: data.user.hospitalName,
-        role: data.user.role
-      });
+      onLogin(
+        {
+          cnic: data.user.cnic,
+          password: password.trim(),
+          hospitalName: data.user.hospitalName,
+          role: data.user.role
+        },
+        data.token
+      );
     } catch (err: any) {
       setErrorMsg('Unable to connect to hospital authentication server. Please check your network connection.');
     } finally {
@@ -122,8 +125,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             type="button"
             onClick={() => handleRoleSelect('doctor')}
             className={`flex-1 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${selectedRole === 'doctor'
-                ? 'bg-[#0F5C56] text-white shadow-sm'
-                : 'text-[#4E6259] hover:text-[#142420]'
+              ? 'bg-[#0F5C56] text-white shadow-sm'
+              : 'text-[#4E6259] hover:text-[#142420]'
               }`}
           >
             <Stethoscope className="w-4 h-4" />
@@ -134,8 +137,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             type="button"
             onClick={() => handleRoleSelect('patient')}
             className={`flex-1 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${selectedRole === 'patient'
-                ? 'bg-[#0F5C56] text-white shadow-sm'
-                : 'text-[#4E6259] hover:text-[#142420]'
+              ? 'bg-[#0F5C56] text-white shadow-sm'
+              : 'text-[#4E6259] hover:text-[#142420]'
               }`}
           >
             <Users className="w-4 h-4" />
@@ -146,8 +149,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             type="button"
             onClick={() => handleRoleSelect('admin')}
             className={`flex-1 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${selectedRole === 'admin'
-                ? 'bg-[#0F5C56] text-white shadow-sm'
-                : 'text-[#4E6259] hover:text-[#142420]'
+              ? 'bg-[#0F5C56] text-white shadow-sm'
+              : 'text-[#4E6259] hover:text-[#142420]'
               }`}
           >
             <ShieldCheck className="w-4 h-4" />
