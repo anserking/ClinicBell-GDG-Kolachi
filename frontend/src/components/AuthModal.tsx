@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserRole } from '../types';
 import { ShieldCheck, Key, Building2, User, Stethoscope, Users, X, ArrowRight } from 'lucide-react';
 
@@ -9,10 +9,26 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
+  const [hospitals, setHospitals] = useState<Array<{ id: string; name: string; code: string }>>([
+    { id: 'hosp-gdg-01', name: 'GDGDemo Hospital — Al-Noor Clinic', code: 'GDGDemo' }
+  ]);
   const [hospitalName, setHospitalName] = useState('GDGDemo Hospital — Al-Noor Clinic');
   const [cnic, setCnic] = useState('42101-1234567-1');
   const [password, setPassword] = useState('password123');
   const [selectedRole, setSelectedRole] = useState<UserRole>('doctor');
+
+  useEffect(() => {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    fetch(`${apiBase}/api/hospitals`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setHospitals(data);
+          setHospitalName(data[0].name);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   if (!isOpen) return null;
 
@@ -115,7 +131,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }
                 className="w-full pl-9 pr-3 py-2.5 bg-white border-2 border-[#DCE6E2] rounded-xl text-[#142420] focus:outline-none focus:border-[#0F5C56] font-semibold text-xs sm:text-sm shadow-xs"
                 style={{ color: '#142420' }}
               >
-                <option value="GDGDemo Hospital — Al-Noor Clinic">GDGDemo Hospital — Al-Noor Clinic</option>
+                {hospitals.map((h) => (
+                  <option key={h.id} value={h.name}>
+                    {h.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

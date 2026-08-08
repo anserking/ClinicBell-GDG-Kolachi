@@ -5,6 +5,7 @@ import healthRouter from './server/routes/health.js';
 import geminiRouter from './server/routes/gemini.js';
 import authRouter from './server/routes/auth.js';
 import adminRouter from './server/routes/admin.js';
+import hospitalsRouter from './server/routes/hospitals.js';
 import { initializeDatabase } from './server/db.js';
 
 dotenv.config();
@@ -35,10 +36,11 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 
-// Health, Auth, Admin and AI API Routes
+// Health, Auth, Admin, Hospitals, and AI API Routes
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/hospitals', hospitalsRouter);
 app.use('/api/gemini', geminiRouter);
 
 app.get('/', (req, res) => {
