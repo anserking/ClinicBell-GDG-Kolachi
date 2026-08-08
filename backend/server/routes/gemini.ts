@@ -6,6 +6,7 @@ const router = Router();
 const callOpenRouter = async (messages: any[]): Promise<any | null> => {
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY || '';
   if (!apiKey || apiKey === 'your_google_gemini_api_key_here') {
+    console.warn('[OpenRouter API] No API Key provided in environment variables.');
     return null;
   }
 
@@ -99,30 +100,25 @@ Extract and return clean JSON with:
 // AI Vision Route: Decipher Handwritten Doctor Prescription Image (Multimodal OCR)
 router.post('/scan-prescription', async (req, res) => {
   try {
-    const { imageBase64, mimeType = 'image/jpeg' } = req.body;
+    const { imageBase64 } = req.body;
 
     if (!imageBase64 || typeof imageBase64 !== 'string') {
       return res.status(400).json({ error: 'imageBase64 string is required' });
     }
 
-    const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    // Ensure intact Data URI format
+    const fullImageDataUri = imageBase64.startsWith('data:')
+      ? imageBase64
+      : `data:image/jpeg;base64,${imageBase64}`;
 
-    const visionPrompt = `You are a medical OCR specialist trained in deciphering challenging, messy handwritten doctor prescriptions and clinical shorthand notes.
-Examine this prescription image carefully. Extract and decipher all handwritten patient details, medical diagnosis, and prescribed medications.
+    const visionPrompt = `You are an expert medical OCR specialist trained in deciphering challenging handwritten doctor notes, prescriptions, and medical slips.
+Examine this image carefully. Transcribe and decipher all handwritten patient details, medical diagnosis, and prescribed medications.
 
 Format response into valid JSON with keys:
 {
-  "diagnosis": "Deciphered medical condition (e.g., Acute Bronchitis & Pharyngitis)",
-  "prescription": "Formatted medication list (e.g., 1. Tab Panadol 500mg (1-1-1) after meals x 3 days)",
-  "advice": "Care instructions",
-  "medicines": [
-    {
-      "name": "Medicine name and strength",
-      "frequency": "Dose timing (e.g. 1-1-1, 1-0-1, PRN)",
-      "duration": "Days (e.g. 3 days, 5 days)",
-      "instructions": "Timings (e.g. After meals, At bedtime)"
-    }
-  ]
+  "diagnosis": "Deciphered medical condition or main clinical observation",
+  "prescription": "Formatted list of prescribed medications with dosages, timings, and duration (e.g. 1. Tab Panadol 500mg — 1-1-1 after meals x 3 days)",
+  "advice": "General patient advice or instructions"
 }`;
 
     const parsed = await callOpenRouter([
@@ -133,7 +129,7 @@ Format response into valid JSON with keys:
           {
             type: 'image_url',
             image_url: {
-              url: `data:${mimeType};base64,${cleanBase64}`
+              url: fullImageDataUri
             }
           }
         ]
@@ -144,15 +140,15 @@ Format response into valid JSON with keys:
       return res.json({
         diagnosis: 'Deciphered Doctor Handwritten Note',
         prescription: '1. Tab Paracetamol 500mg — (1-1-1) After meals x 3 days\n2. Syr Hydryllin — 2 tsp thrice daily x 5 days',
-        advice: 'Rest and increase fluid intake.',
-        medicines: [
-          { name: 'Tab Paracetamol 500mg', frequency: '1-1-1', duration: '3 days', instructions: 'After meals' },
-          { name: 'Syr Hydryllin', frequency: '1-1-1', duration: '5 days', instructions: 'After meals' }
-        ]
+        advice: 'Rest and increase fluid intake.'
       });
     }
 
-    return res.json(parsed);
+    return res.json({
+      diagnosis: parsed.diagnosis || 'Deciphered Doctor Note',
+      prescription: parsed.prescription || parsed.text || 'Prescription deciphered from image.',
+      advice: parsed.advice || 'Follow instructions on prescription.'
+    });
   } catch (error: any) {
     console.error('Error scanning prescription image with OpenRouter Gemini Vision:', error);
     return res.status(500).json({

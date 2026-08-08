@@ -274,7 +274,7 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
             </div>
           </div>
 
-          {/* New Diagnosis & Prescription Input */}
+          {/* New Clinical Visit & Prescription Input */}
           <div className="border border-[#DCE6E2] rounded-2xl p-5 bg-white shadow-2xs space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-semibold text-[#142420] flex items-center gap-2">
@@ -282,142 +282,60 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
                 <span>New Clinical Visit &amp; Prescription</span>
               </h3>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsScannerOpen(true)}
-                  className="flex items-center gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1DA851] font-semibold text-xs px-3 py-1.5 rounded-xl border border-[#25D366]/30 transition-all cursor-pointer"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>📸 Scan Doctor Prescription</span>
-                </button>
-
-                {/* Mode Toggle */}
-                <div className="flex bg-[#F4F7F6] p-1 rounded-xl border border-[#DCE6E2] text-xs">
-                  <button
-                    onClick={() => setInputMode('voice')}
-                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${inputMode === 'voice'
-                      ? 'bg-white text-[#0A413D] shadow-xs'
-                      : 'text-[#4E6259] hover:text-[#142420]'
-                      }`}
-                  >
-                    Voice Dictation
-                  </button>
-                  <button
-                    onClick={() => setInputMode('text')}
-                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${inputMode === 'text'
-                      ? 'bg-white text-[#0A413D] shadow-xs'
-                      : 'text-[#4E6259] hover:text-[#142420]'
-                      }`}
-                  >
-                    Type Note
-                  </button>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsScannerOpen(true)}
+                className="flex items-center gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#1DA851] font-semibold text-xs px-3.5 py-1.5 rounded-xl border border-[#25D366]/30 transition-all cursor-pointer"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>📸 Scan Doctor Prescription</span>
+              </button>
             </div>
 
-            {/* Voice Dictation Button for Prescription */}
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold text-[#4E6259] uppercase tracking-wider block">
-                Prescription &amp; Clinical Notes Voice Dictation:
-              </span>
+            {/* Voice Dictation & Editable Clinical Note Area */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#4E6259] uppercase tracking-wider">
+                  Voice Dictate or Type Prescription:
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTypedText(
+                      'Patient presents with mild throat infection and fever 101°F. Prescribe Augmentin 625mg twice daily for 5 days and Panadol Extra.'
+                    )
+                  }
+                  className="text-[#0F5C56] font-semibold text-xs hover:underline cursor-pointer"
+                >
+                  + Fill Sample Dictation
+                </button>
+              </div>
+
               <VoiceInputButton
                 label="🎙️ Voice Dictate Prescription & Notes"
                 onTranscriptChange={(text) => {
-                  setParsedPrescription(text);
-                  setAudioTranscript(text);
+                  setTypedText(text);
                 }}
                 patientName={patient.name}
               />
-            </div>
 
-            {/* Input Panels */}
-            {inputMode === 'voice' ? (
-              <div className="border border-[#DCE6E2] rounded-xl p-4 bg-[#F4F7F6]/50 space-y-3">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={isRecording ? stopRecording : startRecording}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all shadow-md active:scale-95 ${isRecording ? 'bg-red-600 animate-pulse' : 'bg-[#0F5C56] hover:bg-[#0A413D]'
-                      }`}
-                  >
-                    {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                  </button>
-
-                  <div className="flex-1">
-                    <div className="text-xs font-semibold text-[#142420] flex items-center gap-2">
-                      <span>{isRecording ? 'Recording in progress...' : 'Click mic to dictate'}</span>
-                      {isRecording && (
-                        <span className="font-mono-tabular text-red-600 bg-red-50 px-2 py-0.5 rounded-md text-[11px]">
-                          {formatTime(recordingTime)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[11px] text-[#7C8F87]">
-                      Speak naturally in English or Urdu. Gemini will auto-format diagnosis & rx.
-                    </div>
-                  </div>
-                </div>
-
-                {speechError && (
-                  <div className="bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 rounded-lg text-xs font-medium">
-                    {speechError}
-                  </div>
-                )}
-
-                {/* Simulated Audio Waveform Visualizer */}
-                {isRecording && (
-                  <div className="flex items-center gap-1 h-6 py-1">
-                    {Array.from({ length: 32 }).map((_, idx) => (
-                      <span
-                        key={idx}
-                        className="flex-1 bg-[#0F5C56] rounded-full transition-all duration-150"
-                        style={{
-                          height: `${Math.max(4, Math.sin(idx + recordingTime * 3) * 18 + 10)}px`
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Live Transcript Display */}
-                <textarea
-                  value={audioTranscript}
-                  onChange={(e) => setAudioTranscript(e.target.value)}
-                  placeholder="Dictated notes will appear here in real-time..."
-                  className="w-full h-24 p-3 bg-white border border-[#DCE6E2] rounded-lg text-xs sm:text-sm text-[#142420] focus:outline-none focus:border-[#0F5C56]"
-                />
-
-                <div className="flex items-center justify-between text-[11px] text-[#7C8F87]">
-                  <span>Or tap keyboard mic 🎙️ to dictate</span>
-                  <button
-                    onClick={() =>
-                      setAudioTranscript(
-                        'Patient presents with mild throat infection and fever 101°F. Prescribe Augmentin 625mg twice daily for 5 days and Panadol Extra.'
-                      )
-                    }
-                    className="text-[#0F5C56] font-semibold hover:underline cursor-pointer"
-                  >
-                    + Fill Sample Dictation
-                  </button>
-                </div>
-              </div>
-            ) : (
               <textarea
                 value={typedText}
                 onChange={(e) => setTypedText(e.target.value)}
-                placeholder="e.g. Patient has mild throat infection and fever 101°F. Prescribed Augmentin 625mg b.i.d for 5 days and Panadol Extra."
+                placeholder="Dictate using mic or type clinical notes here... (e.g. Patient has throat infection. Prescribed Augmentin 625mg b.i.d for 5 days and Panadol Extra)"
                 className="w-full h-28 p-3 bg-white border border-[#DCE6E2] rounded-xl text-xs sm:text-sm text-[#142420] focus:outline-none focus:border-[#0F5C56]"
               />
-            )}
+            </div>
 
             {/* AI Auto-Format Action Bar */}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <button
+                type="button"
                 onClick={handleAiStructure}
-                disabled={isAiProcessing || (!audioTranscript.trim() && !typedText.trim())}
-                className="flex items-center gap-1.5 bg-[#E5F0EE] hover:bg-[#0F5C56] text-[#0A413D] hover:text-white font-semibold text-xs py-2 px-3 rounded-lg transition-all disabled:opacity-50"
+                disabled={isAiProcessing || !typedText.trim()}
+                className="flex items-center gap-1.5 bg-[#E5F0EE] hover:bg-[#0F5C56] text-[#0A413D] hover:text-white font-semibold text-xs py-2 px-3 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#0F5C56] group-hover:text-white" />
+                <Sparkles className="w-3.5 h-3.5 text-[#0F5C56]" />
                 <span>{isAiProcessing ? 'AI Formatting...' : 'Gemini Auto-Structure Rx'}</span>
               </button>
 
@@ -428,8 +346,12 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
                   </span>
                 )}
                 <button
-                  onClick={handleSavePrescription}
-                  className="bg-[#0F5C56] hover:bg-[#0A413D] text-white font-semibold text-xs sm:text-sm py-2 px-4 rounded-xl transition-all shadow-xs active:scale-95"
+                  type="button"
+                  onClick={() => {
+                    if (!typedText.trim()) return;
+                    handleSavePrescription();
+                  }}
+                  className="bg-[#0F5C56] hover:bg-[#0A413D] text-white font-semibold text-xs sm:text-sm py-2 px-4 rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer"
                 >
                   Save to Patient Record
                 </button>
@@ -536,17 +458,9 @@ export const PatientDrawer: React.FC<PatientDrawerProps> = ({
         onClose={() => setIsScannerOpen(false)}
         onScanComplete={(data) => {
           if (data.diagnosis) setParsedDiagnosis(data.diagnosis);
-          if (data.prescription) setParsedPrescription(data.prescription);
-          if (data.medicines && data.medicines.length > 0) {
-            setStructuredMedicines(
-              data.medicines.map((m, idx) => ({
-                id: `scanned-${idx}`,
-                name: m.name || '',
-                frequency: m.frequency || '1-0-1',
-                duration: m.duration || '5 days',
-                instructions: m.instructions || 'After meals'
-              }))
-            );
+          if (data.prescription) {
+            setParsedPrescription(data.prescription);
+            setTypedText(data.prescription);
           }
         }}
       />
